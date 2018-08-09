@@ -24,6 +24,33 @@
 #include "modsecurity/transaction.h"
 #include "src/utils/regex.h"
 
+#ifdef __cpluscplus
+
+#include<cstdlib>
+
+void* operator new(size_t size)
+{
+    void* p=malloc(size);
+    return p;
+}
+
+void* operator new[](size_t size)
+{
+    return operator new(size);
+}
+
+void operator delete(void* p) noexcept(true)
+{
+    if (0 != p) free(p);
+}
+
+void operator delete[](void* p) noexcept(true)
+{
+    operator delete(p);
+}
+
+#endif //__cpluscplus
+
 namespace modsecurity {
 
 
