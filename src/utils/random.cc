@@ -25,10 +25,10 @@
 namespace modsecurity {
 namespace utils {
 
+static std::random_device rd;
+static std::mt19937 mt(rd());
 
 double random_number(const double from, const double to) {
-    std::random_device rd;
-    std::mt19937 mt(rd());
     return std::bind(
         std::uniform_real_distribution<>{from, to},
         std::default_random_engine{ mt() })();
