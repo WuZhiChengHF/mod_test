@@ -32,6 +32,12 @@ typedef struct Variable_t VariableValue;
 #endif
 
 #ifdef __cplusplus
+
+void* operator new(size_t size);
+void* operator new[](size_t size);
+void delete(void* p);
+void delete[](void* p);
+
 namespace modsecurity {
 
 class Collection;
