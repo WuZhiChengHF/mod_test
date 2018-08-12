@@ -5,3 +5,6 @@
 *.la
 *.lai
 *.o
+.deps
+.libs
+.dirstamp
