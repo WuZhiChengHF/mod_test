@@ -53,8 +53,8 @@ void operator delete[](void* p) noexcept(true)
 
 namespace modsecurity {
 
-template<>
-VariableOrigin* CacheList::pop_one(void)
+template <>
+VariableOrigin* CacheList<VariableOrigin>::pop_one(void)
 {
     if (clist.size() == 0)
     {
@@ -62,7 +62,6 @@ VariableOrigin* CacheList::pop_one(void)
     }
 
     VariableOrigin* p = clist.front();
-    p->init(o);
     clist.pop_front();
 
     return p;
