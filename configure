@@ -17201,6 +17201,9 @@ rm -f core conftest.err conftest.$ac_objext \
 
 fi
 
+#add tcmalloc.so
+LDFLAGS="$LDFLAGS -ltcmalloc"
+
   shlibpath_overrides_runpath=$lt_cv_shlibpath_overrides_runpath
 
   # This implies no fast_install, which is unacceptable.
@@ -17648,7 +17651,7 @@ MSC_VERSION_WITH_PATCHLEVEL=3.0.2
 MSC_VERSION=3.0
 
 
-MSC_GIT_VERSION=v3.0.2-72-g156527a
+MSC_GIT_VERSION=
 
 
 
@@ -23171,9 +23174,9 @@ echo "ModSecurity - ${MSC_GIT_VERSION} for $PLATFORM"
 echo " "
 echo " Mandatory dependencies"
 echo -n "   + libInjection                                  ...."
-echo v3.0.2-72-g156527a
+echo
 echo -n "   + SecLang tests                                 ...."
-echo 156527a
+echo b48aa00
 
 echo " "
 echo " Optional dependencies"
