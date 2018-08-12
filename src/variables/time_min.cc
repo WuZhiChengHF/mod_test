@@ -46,10 +46,10 @@ void TimeMin::evaluate(Transaction *transaction,
     localtime_r(&timer, &timeinfo);
     strftime(tstr, 200, "%M", &timeinfo);
 
-    transaction->m_variableTimeMin.assign(tstr);
+    (*transaction)->m_variableTimeMin.assign(tstr);
 
     l->push_back(new VariableValue(&m_retName,
-        &transaction->m_variableTimeMin));
+        &(*transaction)->m_variableTimeMin));
 }
 
 

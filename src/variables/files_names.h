@@ -39,7 +39,7 @@ class FilesNames_DictElement : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableFilesNames.resolve(m_dictElement, l);
+        (*transaction)->m_variableFilesNames.resolve(m_dictElement, l);
     }
 
     std::string m_dictElement;
@@ -54,7 +54,7 @@ class FilesNames_NoDictElement : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableFilesNames.resolve(l);
+        (*transaction)->m_variableFilesNames.resolve(l);
     }
 };
 
@@ -69,7 +69,7 @@ class FilesNames_DictElementRegexp : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableFilesNames.resolveRegularExpression(
+        (*transaction)->m_variableFilesNames.resolveRegularExpression(
             &m_r, l);
     }
 

@@ -39,7 +39,7 @@ class Geo_DictElement : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableGeo.resolve(m_dictElement, l);
+        (*transaction)->m_variableGeo.resolve(m_dictElement, l);
     }
 
     std::string m_dictElement;
@@ -54,7 +54,7 @@ class Geo_NoDictElement : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableGeo.resolve(l);
+        (*transaction)->m_variableGeo.resolve(l);
     }
 };
 
@@ -68,7 +68,7 @@ class Geo_DictElementRegexp : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableGeo.resolveRegularExpression(
+        (*transaction)->m_variableGeo.resolveRegularExpression(
             &m_r, l);
     }
 

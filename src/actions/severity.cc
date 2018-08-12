@@ -84,7 +84,7 @@ bool Severity::evaluate(Rule *rule, Transaction *transaction,
         transaction->m_highestSeverityAction = this->m_severity;
     }
 
-    transaction->m_variableRule.set("severity", std::to_string(m_severity), 0);
+    (*transaction)->m_variableRule.set("severity", std::to_string(m_severity), 0);
 
     return true;
 }

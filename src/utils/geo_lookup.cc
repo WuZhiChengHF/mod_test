@@ -148,7 +148,7 @@ bool GeoLookup::lookup(const std::string& target, Transaction *trans,
             status = MMDB_get_value(&r.entry, &entry_data,
                 "country", "iso_code", NULL);
             if (status == MMDB_SUCCESS && entry_data.has_data) {
-                trans->m_variableGeo.set("COUNTRY_CODE",
+                (*trans)->m_variableGeo.set("COUNTRY_CODE",
                     std::string(entry_data.utf8_string,
                         entry_data.data_size), 0);
             }
@@ -156,7 +156,7 @@ bool GeoLookup::lookup(const std::string& target, Transaction *trans,
             status = MMDB_get_value(&r.entry, &entry_data,
                 "country", "names", "en", NULL);
             if (status == MMDB_SUCCESS && entry_data.has_data) {
-                trans->m_variableGeo.set("COUNTRY_NAME",
+                (*trans)->m_variableGeo.set("COUNTRY_NAME",
                     std::string(entry_data.utf8_string,
                         entry_data.data_size), 0);
             }
@@ -164,7 +164,7 @@ bool GeoLookup::lookup(const std::string& target, Transaction *trans,
             status = MMDB_get_value(&r.entry, &entry_data,
                 "continent", "names", "en", NULL);
             if (status == MMDB_SUCCESS && entry_data.has_data) {
-                trans->m_variableGeo.set("COUNTRY_CONTINENT",
+                (*trans)->m_variableGeo.set("COUNTRY_CONTINENT",
                     std::string(entry_data.utf8_string,
                         entry_data.data_size), 0);
             }
@@ -172,7 +172,7 @@ bool GeoLookup::lookup(const std::string& target, Transaction *trans,
             status = MMDB_get_value(&r.entry, &entry_data,
                 "city", "names", "en", NULL);
             if (status == MMDB_SUCCESS && entry_data.has_data) {
-                trans->m_variableGeo.set("CITY",
+                (*trans)->m_variableGeo.set("CITY",
                     std::string(entry_data.utf8_string,
                         entry_data.data_size), 0);
             }
@@ -180,7 +180,7 @@ bool GeoLookup::lookup(const std::string& target, Transaction *trans,
             status = MMDB_get_value(&r.entry, &entry_data,
                 "postal", "code", NULL);
             if (status == MMDB_SUCCESS && entry_data.has_data) {
-                trans->m_variableGeo.set("POSTAL_CODE",
+                (*trans)->m_variableGeo.set("POSTAL_CODE",
                     std::string(entry_data.utf8_string,
                         entry_data.data_size), 0);
             }
@@ -188,14 +188,14 @@ bool GeoLookup::lookup(const std::string& target, Transaction *trans,
             status = MMDB_get_value(&r.entry, &entry_data,
                 "location", "latitude", NULL);
             if (status == MMDB_SUCCESS && entry_data.has_data) {
-                trans->m_variableGeo.set("LATITUDE",
+                (*trans)->m_variableGeo.set("LATITUDE",
                     std::to_string(entry_data.double_value), 0);
             }
 
             status = MMDB_get_value(&r.entry, &entry_data,
                 "location", "longitude", NULL);
             if (status == MMDB_SUCCESS && entry_data.has_data) {
-                trans->m_variableGeo.set("LONGITUDE",
+                (*trans)->m_variableGeo.set("LONGITUDE",
                     std::to_string(entry_data.double_value), 0);
             }
 
@@ -203,28 +203,28 @@ bool GeoLookup::lookup(const std::string& target, Transaction *trans,
             status = MMDB_get_value(&r.entry, &entry_data,
                 NULL);
             if (status == MMDB_SUCCESS && entry_data.has_data) {
-                trans->m_variableGeo.set("COUNTRY_CODE3",
+                (*trans)->m_variableGeo.set("COUNTRY_CODE3",
                     std::string(entry_data.utf8_string), 0);
             }
 
             status = MMDB_get_value(&r.entry, &entry_data,
                 NULL);
             if (status == MMDB_SUCCESS && entry_data.has_data) {
-                trans->m_variableGeo.set("REGION",
+                (*trans)->m_variableGeo.set("REGION",
                     std::string(entry_data.utf8_string), 0);
             }
 
             status = MMDB_get_value(&r.entry, &entry_data,
                 NULL);
             if (status == MMDB_SUCCESS && entry_data.has_data) {
-                trans->m_variableGeo.set("DMA_CODE",
+                (*trans)->m_variableGeo.set("DMA_CODE",
                     std::string(entry_data.utf8_string), 0);
             }
 
             status = MMDB_get_value(&r.entry, &entry_data,
                 NULL);
             if (status == MMDB_SUCCESS && entry_data.has_data) {
-                trans->m_variableGeo.set("AREA_CODE",
+                (*trans)->m_variableGeo.set("AREA_CODE",
                     std::string(entry_data.utf8_string), 0);
             }
             */
@@ -242,47 +242,47 @@ bool GeoLookup::lookup(const std::string& target, Transaction *trans,
 
         if (trans) {
             if (gir->country_code) {
-                trans->m_variableGeo.set("COUNTRY_CODE",
+                (*trans)->m_variableGeo.set("COUNTRY_CODE",
                     std::string(gir->country_code), 0);
             }
             if (gir->country_code3) {
-                trans->m_variableGeo.set("COUNTRY_CODE3",
+                (*trans)->m_variableGeo.set("COUNTRY_CODE3",
                     std::string(gir->country_code3), 0);
             }
             if (gir->country_name) {
-                trans->m_variableGeo.set("COUNTRY_NAME",
+                (*trans)->m_variableGeo.set("COUNTRY_NAME",
                     std::string(gir->country_name), 0);
             }
             if (gir->continent_code) {
-                trans->m_variableGeo.set("COUNTRY_CONTINENT",
+                (*trans)->m_variableGeo.set("COUNTRY_CONTINENT",
                     std::string(gir->continent_code), 0);
             }
             if (gir->country_code && gir->region) {
-                trans->m_variableGeo.set("REGION",
+                (*trans)->m_variableGeo.set("REGION",
                     std::string(GeoIP_region_name_by_code(gir->country_code,
                         gir->region)), 0);
             }
             if (gir->city) {
-                trans->m_variableGeo.set("CITY", std::string(gir->city), 0);
+                (*trans)->m_variableGeo.set("CITY", std::string(gir->city), 0);
             }
             if (gir->postal_code) {
-                trans->m_variableGeo.set("POSTAL_CODE",
+                (*trans)->m_variableGeo.set("POSTAL_CODE",
                     std::string(gir->postal_code), 0);
             }
             if (gir->latitude) {
-                trans->m_variableGeo.set("LATITUDE",
+                (*trans)->m_variableGeo.set("LATITUDE",
                     std::to_string(gir->latitude), 0);
             }
             if (gir->longitude) {
-                trans->m_variableGeo.set("LONGITUDE",
+                (*trans)->m_variableGeo.set("LONGITUDE",
                     std::to_string(gir->longitude), 0);
             }
             if (gir->metro_code) {
-                trans->m_variableGeo.set("DMA_CODE",
+                (*trans)->m_variableGeo.set("DMA_CODE",
                     std::to_string(gir->metro_code), 0);
             }
             if (gir->area_code) {
-                trans->m_variableGeo.set("AREA_CODE",
+                (*trans)->m_variableGeo.set("AREA_CODE",
                     std::to_string(gir->area_code), 0);
             }
         }

@@ -40,7 +40,7 @@ bool SetRSC::evaluate(Rule *rule, Transaction *t) {
 #endif
 
     t->m_collections.m_resource_collection_key = colNameExpanded;
-    t->m_variableResource.set(colNameExpanded, t->m_variableOffset);
+    (*t)->m_variableResource.set(colNameExpanded, (*t)->m_variableOffset);
 
     return true;
 }

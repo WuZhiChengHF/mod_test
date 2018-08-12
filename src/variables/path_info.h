@@ -37,7 +37,7 @@ class PathInfo : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) {
-        transaction->m_variablePathInfo.evaluate(l);
+        (*transaction)->m_variablePathInfo.evaluate(l);
     }
 };
 

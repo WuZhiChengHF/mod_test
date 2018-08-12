@@ -39,7 +39,7 @@ class FilesSizes_DictElement : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableFilesSizes.resolve(m_dictElement, l);
+        (*transaction)->m_variableFilesSizes.resolve(m_dictElement, l);
     }
 
     std::string m_dictElement;
@@ -54,7 +54,7 @@ class FilesSizes_NoDictElement : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableFilesSizes.resolve(l);
+        (*transaction)->m_variableFilesSizes.resolve(l);
     }
 };
 
@@ -68,7 +68,7 @@ class FilesSizes_DictElementRegexp : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableFilesSizes.resolveRegularExpression(
+        (*transaction)->m_variableFilesSizes.resolveRegularExpression(
             &m_r, l);
     }
 

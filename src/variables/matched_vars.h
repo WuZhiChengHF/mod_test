@@ -39,7 +39,7 @@ class MatchedVars_DictElement : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableMatchedVars.resolve(m_dictElement, l);
+        (*transaction)->m_variableMatchedVars.resolve(m_dictElement, l);
     }
 
     std::string m_dictElement;
@@ -54,7 +54,7 @@ class MatchedVars_NoDictElement : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableMatchedVars.resolve(l);
+        (*transaction)->m_variableMatchedVars.resolve(l);
     }
 };
 
@@ -68,7 +68,7 @@ class MatchedVars_DictElementRegexp : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableMatchedVars.resolveRegularExpression(
+        (*transaction)->m_variableMatchedVars.resolveRegularExpression(
             &m_r, l);
     }
 

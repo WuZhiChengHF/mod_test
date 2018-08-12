@@ -59,7 +59,8 @@ using modsecurity::actions::Action;
 using modsecurity::RequestBodyProcessor::Multipart;
 using modsecurity::RequestBodyProcessor::XML;
 
-namespace modsecurity {
+namespace modsecurity
+{
 
 /**
  * @name    Transaction
@@ -101,42 +102,43 @@ namespace modsecurity {
  */
 Transaction::Transaction(ModSecurity *ms, Rules *rules, void *logCbData)
     : m_clientPort(0),
-    m_serverPort(0),
-    m_uri_no_query_string_decoded(""),
-    m_rules(rules),
-    m_timeStamp(std::time(NULL)),
-    m_httpCodeReturned(200),
-    m_highestSeverityAction(255),
-    m_ARGScombinedSizeDouble(0),
-    m_requestBodyType(UnknownFormat),
-    m_requestBodyProcessor(UnknownFormat),
-    m_requestBodyAccess(Rules::PropertyNotSetConfigBoolean),
-    m_marker(""),
-    m_allowType(modsecurity::actions::disruptive::NoneAllowType),
-    m_skip_next(0),
-    m_creationTimeStamp(utils::cpu_seconds()),
-    m_logCbData(logCbData),
-    m_ms(ms),
-    m_secRuleEngine(RulesProperties::PropertyNotSetRuleEngine),
-    m_collections(ms->m_global_collection, ms->m_ip_collection,
-        ms->m_session_collection, ms->m_user_collection,
-        ms->m_resource_collection),
+      m_serverPort(0),
+      m_uri_no_query_string_decoded(""),
+      m_rules(rules),
+      m_timeStamp(std::time(NULL)),
+      m_httpCodeReturned(200),
+      m_highestSeverityAction(255),
+      m_ARGScombinedSizeDouble(0),
+      m_requestBodyType(UnknownFormat),
+      m_requestBodyProcessor(UnknownFormat),
+      m_requestBodyAccess(Rules::PropertyNotSetConfigBoolean),
+      m_marker(""),
+      m_allowType(modsecurity::actions::disruptive::NoneAllowType),
+      m_skip_next(0),
+      m_creationTimeStamp(utils::cpu_seconds()),
+      m_logCbData(logCbData),
+      m_ms(ms),
+      m_secRuleEngine(RulesProperties::PropertyNotSetRuleEngine),
+      m_collections(ms->m_global_collection, ms->m_ip_collection,
+                    ms->m_session_collection, ms->m_user_collection,
+                    ms->m_resource_collection),
 #ifdef WITH_YAJL
-    m_json(new RequestBodyProcessor::JSON(this)),
+      m_json(new RequestBodyProcessor::JSON(this)),
 #else
-    m_json(NULL),
+      m_json(NULL),
 #endif
 #ifdef WITH_LIBXML2
-    m_xml(new RequestBodyProcessor::XML(this)),
+      m_xml(new RequestBodyProcessor::XML(this)),
 #else
-    m_xml(NULL),
+      m_xml(NULL),
 #endif
-    TransactionAnchoredVariables(this) {
-    m_id = std::to_string(this->m_timeStamp) + \
-        std::to_string(modsecurity::utils::generate_transaction_unique_id());
+      //TransactionAnchoredVariables(this)
+      m_anv(new TransactionAnchoredVariables(this))
+{
+    m_id = std::to_string(this->m_timeStamp) + std::to_string(modsecurity::utils::generate_transaction_unique_id());
     m_rules->incrementReferenceCount();
 
-    m_variableUrlEncodedError.set("0", 0);
+    m_anv->m_variableUrlEncodedError.set("0", 0);
 
 #ifndef NO_LOGS
     this->debug(4, "Initializing transaction");
@@ -146,7 +148,10 @@ Transaction::Transaction(ModSecurity *ms, Rules *rules, void *logCbData)
 }
 
 
-Transaction::~Transaction() {
+Transaction::~Transaction()
+{
+    if (m_anv != NULL) delete m_anv;
+
     m_responseBody.str(std::string());
     m_responseBody.clear();
 
@@ -175,14 +180,16 @@ Transaction::~Transaction() {
  *
  * Debug logs are important during the rules creation phase, this method can be
  * used to print message on this debug log.
- * 
+ *
  * @param level Debug level, current supported from 0 to 9.
  * @param message Message to be logged.
  *
  */
 #ifndef NO_LOGS
-void Transaction::debug(int level, std::string message) const {
-    if (m_rules == NULL) {
+void Transaction::debug(int level, std::string message) const
+{
+    if (m_rules == NULL)
+    {
         return;
     }
 
@@ -212,7 +219,8 @@ void Transaction::debug(int level, std::string message) const {
  *
  */
 int Transaction::processConnection(const char *client, int cPort,
-    const char *server, int sPort) {
+                                   const char *server, int sPort)
+{
     this->m_clientIpAddress = client;
     this->m_serverIpAddress = server;
     this->m_clientPort = cPort;
@@ -222,14 +230,14 @@ int Transaction::processConnection(const char *client, int cPort,
     debug(4, "Starting phase CONNECTION. (SecRules 0)");
 #endif
 
-    m_variableRemoteHost.set(m_clientIpAddress, m_variableOffset);
-    m_variableUniqueID.set(m_id, m_variableOffset);
-    m_variableRemoteAddr.set(m_clientIpAddress, m_variableOffset);
-    m_variableServerAddr.set(m_serverIpAddress, m_variableOffset);
-    m_variableServerPort.set(std::to_string(this->m_serverPort),
-        m_variableOffset);
-    m_variableRemotePort.set(std::to_string(this->m_clientPort),
-        m_variableOffset);
+    m_anv->m_variableRemoteHost.set(m_clientIpAddress, m_anv->m_variableOffset);
+    m_anv->m_variableUniqueID.set(m_id, m_anv->m_variableOffset);
+    m_anv->m_variableRemoteAddr.set(m_clientIpAddress, m_anv->m_variableOffset);
+    m_anv->m_variableServerAddr.set(m_serverIpAddress, m_anv->m_variableOffset);
+    m_anv->m_variableServerPort.set(std::to_string(this->m_serverPort),
+                             m_anv->m_variableOffset);
+    m_anv->m_variableRemotePort.set(std::to_string(this->m_clientPort),
+                             m_anv->m_variableOffset);
 
     this->m_rules->evaluate(modsecurity::ConnectionPhase, this);
     return true;
@@ -237,14 +245,17 @@ int Transaction::processConnection(const char *client, int cPort,
 
 
 bool Transaction::extractArguments(const std::string &orig,
-    const std::string& buf, size_t offset) {
+                                   const std::string& buf, size_t offset)
+{
     char sep1 = '&';
-    if (m_rules->m_secArgumentSeparator.m_set) {
+    if (m_rules->m_secArgumentSeparator.m_set)
+    {
         sep1 = m_rules->m_secArgumentSeparator.m_value.at(0);
     }
     std::vector<std::string> key_value_sets = utils::string::ssplit(buf, sep1);
 
-    for (std::string t : key_value_sets) {
+    for (std::string t : key_value_sets)
+    {
         char sep2 = '=';
         int i = 0;
         size_t key_s = 0;
@@ -255,12 +266,18 @@ bool Transaction::extractArguments(const std::string &orig,
         std::string key;
         std::string value;
         std::vector<std::string> key_value = utils::string::ssplit(t, sep2);
-        for (auto& a : key_value) {
-            if (i == 0) {
+        for (auto& a : key_value)
+        {
+            if (i == 0)
+            {
                 key = a;
-            } else if (i == 1) {
+            }
+            else if (i == 1)
+            {
                 value = a;
-            } else {
+            }
+            else
+            {
                 value = value + "=" + a;
             }
             i++;
@@ -269,24 +286,25 @@ bool Transaction::extractArguments(const std::string &orig,
         key_s = (key.length() + 1);
         value_s = (value.length() + 1);
         unsigned char *key_c = reinterpret_cast<unsigned char *>(
-            calloc(sizeof(char), key_s));
+                                   calloc(sizeof(char), key_s));
         unsigned char *value_c = reinterpret_cast<unsigned char *>(
-            calloc(sizeof(char), value_s));
+                                     calloc(sizeof(char), value_s));
 
         memcpy(key_c, key.c_str(), key_s);
         memcpy(value_c, value.c_str(), value_s);
 
         key_s = utils::urldecode_nonstrict_inplace(key_c, key_s,
-            &invalid, &changed);
+                &invalid, &changed);
         value_s = utils::urldecode_nonstrict_inplace(value_c, value_s,
-            &invalid, &changed);
+                  &invalid, &changed);
 
-        if (invalid) {
-            m_variableUrlEncodedError.set("1", m_variableOffset);
+        if (invalid)
+        {
+            m_anv->m_variableUrlEncodedError.set("1", m_anv->m_variableOffset);
         }
 
         addArgument(orig, std::string(reinterpret_cast<char *>(key_c), key_s-1),
-            std::string(reinterpret_cast<char *>(value_c), value_s-1), offset);
+                    std::string(reinterpret_cast<char *>(value_c), value_s-1), offset);
         offset = offset + t.size() + 1;
 
         free(key_c);
@@ -298,32 +316,36 @@ bool Transaction::extractArguments(const std::string &orig,
 
 
 bool Transaction::addArgument(const std::string& orig, const std::string& key,
-    const std::string& value, size_t offset) {
+                              const std::string& value, size_t offset)
+{
 #ifndef NO_LOGS
     debug(4, "Adding request argument (" + orig + "): name \"" + \
-                key + "\", value \"" + value + "\"");
+          key + "\", value \"" + value + "\"");
 #endif
 
     size_t k_offset = offset;
     offset = offset + key.size() + 1;
-    m_variableArgs.set(key, value, offset);
-    m_variableArgsNames.set(key, key, k_offset);
+    m_anv->m_variableArgs.set(key, value, offset);
+    m_anv->m_variableArgsNames.set(key, key, k_offset);
 
-    if (orig == "GET") {
-        m_variableArgsGet.set(key, value, offset);
-        m_variableArgsGetNames.set(key, key, k_offset);
-    } else if (orig == "POST") {
-        m_variableArgsPost.set(key, value, offset);
-        m_variableArgsPostNames.set(key, key, k_offset);
+    if (orig == "GET")
+    {
+        m_anv->m_variableArgsGet.set(key, value, offset);
+        m_anv->m_variableArgsGetNames.set(key, key, k_offset);
+    }
+    else if (orig == "POST")
+    {
+        m_anv->m_variableArgsPost.set(key, value, offset);
+        m_anv->m_variableArgsPostNames.set(key, key, k_offset);
     }
 
     m_ARGScombinedSizeDouble = m_ARGScombinedSizeDouble + \
-        key.length() + value.length();
+                               key.length() + value.length();
 
-    m_variableARGScombinedSize.set(std::to_string(m_ARGScombinedSizeDouble),
-        offset - key.size() - 1, key.size());
-    m_variableARGScombinedSize.set(std::to_string(m_ARGScombinedSizeDouble),
-        offset, value.length());
+    m_anv->m_variableARGScombinedSize.set(std::to_string(m_ARGScombinedSizeDouble),
+                                   offset - key.size() - 1, key.size());
+    m_anv->m_variableARGScombinedSize.set(std::to_string(m_ARGScombinedSizeDouble),
+                                   offset, value.length());
 
     return true;
 }
@@ -353,7 +375,8 @@ bool Transaction::addArgument(const std::string& orig, const std::string& key,
  *
  */
 int Transaction::processURI(const char *uri, const char *method,
-    const char *http_version) {
+                            const char *http_version)
+{
 
 #ifndef NO_LOGS
     debug(4, "Starting phase URI. (SecRules 0 + 1/2)");
@@ -368,93 +391,109 @@ int Transaction::processURI(const char *uri, const char *method,
     size_t pos_raw = uri_s.find("?");
     size_t var_size = pos_raw;
 
-    m_variableRequestMethod.set(method, 0);
+    m_anv->m_variableRequestMethod.set(method, 0);
 
 
     std::string requestLine(std::string(method) + " " + std::string(uri));
-    m_variableRequestLine.set(requestLine \
-        + " HTTP/" + std::string(http_version), m_variableOffset);
+    m_anv->m_variableRequestLine.set(requestLine \
+                              + " HTTP/" + std::string(http_version), m_anv->m_variableOffset);
 
-    m_variableRequestProtocol.set("HTTP/" + std::string(http_version),
-        m_variableOffset + requestLine.size() + 1);
+    m_anv->m_variableRequestProtocol.set("HTTP/" + std::string(http_version),
+                                  m_anv->m_variableOffset + requestLine.size() + 1);
 
 
 
-    if (pos != std::string::npos) {
+    if (pos != std::string::npos)
+    {
         m_uri_no_query_string_decoded = std::string(m_uri_decoded, 0, pos);
-    } else {
+    }
+    else
+    {
         m_uri_no_query_string_decoded = std::string(m_uri_decoded);
     }
 
 
-    if (pos_raw != std::string::npos) {
+    if (pos_raw != std::string::npos)
+    {
         std::string qry = std::string(uri_s, pos_raw + 1,
-            uri_s.length() - (pos_raw + 1));
-        m_variableQueryString.set(qry, pos_raw + 1
-            + std::string(method).size() + 1);
+                                      uri_s.length() - (pos_raw + 1));
+        m_anv->m_variableQueryString.set(qry, pos_raw + 1
+                                  + std::string(method).size() + 1);
     }
 
     std::string path_info;
-    if (pos == std::string::npos) {
+    if (pos == std::string::npos)
+    {
         path_info = std::string(m_uri_decoded, 0);
-    } else {
+    }
+    else
+    {
         path_info = std::string(m_uri_decoded, 0, pos);
     }
-    if (var_size == std::string::npos) {
+    if (var_size == std::string::npos)
+    {
         var_size = uri_s.size();
     }
 
-    m_variablePathInfo.set(path_info, m_variableOffset + strlen(method) +
-        1, var_size);
-    m_variableRequestFilename.set(path_info,  m_variableOffset +
-        strlen(method) + 1, var_size);
+    m_anv->m_variablePathInfo.set(path_info, m_anv->m_variableOffset + strlen(method) +
+                           1, var_size);
+    m_anv->m_variableRequestFilename.set(path_info,  m_anv->m_variableOffset +
+                                  strlen(method) + 1, var_size);
 
 
 
     size_t offset = path_info.find_last_of("/\\");
-    if (offset != std::string::npos && path_info.length() > offset + 1) {
+    if (offset != std::string::npos && path_info.length() > offset + 1)
+    {
         std::string basename = std::string(path_info, offset + 1,
-            path_info.length() - (offset + 1));
-        m_variableRequestBasename.set(basename, m_variableOffset +
-            strlen(method) + 1 + offset + 1);
+                                           path_info.length() - (offset + 1));
+        m_anv->m_variableRequestBasename.set(basename, m_anv->m_variableOffset +
+                                      strlen(method) + 1 + offset + 1);
     }
 
-    m_variableOffset = m_variableRequestLine.m_value.size();
+    m_anv->m_variableOffset = m_anv->m_variableRequestLine.m_value.size();
 
     std::string parsedURI = m_uri_decoded;
     // The more popular case is without domain
-    if (!m_uri_decoded.empty() && m_uri_decoded.at(0) != '/') {
+    if (!m_uri_decoded.empty() && m_uri_decoded.at(0) != '/')
+    {
         bool fullDomain = true;
         size_t scheme = m_uri_decoded.find(":")+1;
-        if (scheme == std::string::npos) {
+        if (scheme == std::string::npos)
+        {
             fullDomain = false;
         }
         // Searching with a pos of -1 is undefined we also shortcut
-        if (scheme != std::string::npos && fullDomain == true) {
+        if (scheme != std::string::npos && fullDomain == true)
+        {
             // Assuming we found a colon make sure its followed
             size_t netloc = m_uri_decoded.find("//", scheme) + 2;
-            if (netloc == std::string::npos || (netloc != scheme + 2)) {
+            if (netloc == std::string::npos || (netloc != scheme + 2))
+            {
                 fullDomain = false;
             }
-            if (netloc != std::string::npos && fullDomain == true) {
+            if (netloc != std::string::npos && fullDomain == true)
+            {
                 size_t path = m_uri_decoded.find("/", netloc);
-                if (path != std::string::npos && fullDomain == true) {
+                if (path != std::string::npos && fullDomain == true)
+                {
                     parsedURI = m_uri_decoded.substr(path);
                 }
             }
         }
     }
 
-    m_variableRequestURI.set(parsedURI, std::string(method).size() + 1,
-        uri_s.size());
-    m_variableRequestURIRaw.set(uri, std::string(method).size() + 1);
+    m_anv->m_variableRequestURI.set(parsedURI, std::string(method).size() + 1,
+                             uri_s.size());
+    m_anv->m_variableRequestURIRaw.set(uri, std::string(method).size() + 1);
 
-    if (m_variableQueryString.m_value.empty() == false) {
-        extractArguments("GET", m_variableQueryString.m_value,
-            m_variableQueryString.m_offset);
+    if (m_anv->m_variableQueryString.m_value.empty() == false)
+    {
+        extractArguments("GET", m_anv->m_variableQueryString.m_value,
+                         m_anv->m_variableQueryString.m_offset);
     }
 
-    m_variableOffset = m_variableOffset + 1;
+    m_anv->m_variableOffset = m_anv->m_variableOffset + 1;
     return true;
 }
 
@@ -473,12 +512,14 @@ int Transaction::processURI(const char *uri, const char *method,
  * @retval false Operation failed.
  *
  */
-int Transaction::processRequestHeaders() {
+int Transaction::processRequestHeaders()
+{
 #ifndef NO_LOGS
     debug(4, "Starting phase REQUEST_HEADERS.  (SecRules 1)");
 #endif
 
-    if (getRuleEngineState() == Rules::DisabledRuleEngine) {
+    if (getRuleEngineState() == Rules::DisabledRuleEngine)
+    {
 #ifndef NO_LOGS
         debug(4, "Rule engine disabled, returning...");
 #endif
@@ -509,34 +550,40 @@ int Transaction::processRequestHeaders() {
  *
  */
 int Transaction::addRequestHeader(const std::string& key,
-    const std::string& value) {
-    m_variableRequestHeadersNames.set(key, key, m_variableOffset);
+                                  const std::string& value)
+{
+    m_anv->m_variableRequestHeadersNames.set(key, key, m_anv->m_variableOffset);
 
-    m_variableOffset = m_variableOffset + key.size() + 2;
-    m_variableRequestHeaders.set(key, value, m_variableOffset);
+    m_anv->m_variableOffset = m_anv->m_variableOffset + key.size() + 2;
+    m_anv->m_variableRequestHeaders.set(key, value, m_anv->m_variableOffset);
 
 
     std::string keyl = utils::string::tolower(key);
-    if (keyl == "authorization") {
+    if (keyl == "authorization")
+    {
         std::vector<std::string> type = utils::string::split(value, ' ');
-        m_variableAuthType.set(type[0], m_variableOffset);
+        m_anv->m_variableAuthType.set(type[0], m_anv->m_variableOffset);
     }
 
-    if (keyl == "cookie") {
-        size_t localOffset = m_variableOffset;
+    if (keyl == "cookie")
+    {
+        size_t localOffset = m_anv->m_variableOffset;
         std::vector<std::string> cookies = utils::string::ssplit(value, ';');
-        for (const std::string &c : cookies) {
+        for (const std::string &c : cookies)
+        {
             std::vector<std::string> s = utils::string::split(c,
-               '=');
-            if (s.size() > 1) {
-                if (s[0].at(0) == ' ') {
+                                         '=');
+            if (s.size() > 1)
+            {
+                if (s[0].at(0) == ' ')
+                {
                     s[0].erase(0, 1);
                 }
-                m_variableRequestCookiesNames.set(s[0],
-                    s[0], localOffset);
+                m_anv->m_variableRequestCookiesNames.set(s[0],
+                                                  s[0], localOffset);
 
                 localOffset = localOffset + s[0].size() + 1;
-                m_variableRequestCookies.set(s[0], s[1], localOffset);
+                m_anv->m_variableRequestCookies.set(s[0], s[1], localOffset);
                 localOffset = localOffset + s[1].size() + 2;
             }
         }
@@ -548,26 +595,30 @@ int Transaction::addRequestHeader(const std::string& key,
      *
      */
 
-    if (keyl == "content-type") {
+    if (keyl == "content-type")
+    {
         std::string multipart("multipart/form-data");
         std::string urlencoded("application/x-www-form-urlencoded");
         std::string l = utils::string::tolower(value);
-        if (l.compare(0, multipart.length(), multipart) == 0) {
+        if (l.compare(0, multipart.length(), multipart) == 0)
+        {
             this->m_requestBodyType = MultiPartRequestBody;
-            m_variableReqbodyProcessor.set("MULTIPART", m_variableOffset);
+            m_anv->m_variableReqbodyProcessor.set("MULTIPART", m_anv->m_variableOffset);
         }
 
-        if (l.compare(0, urlencoded.length(), urlencoded) == 0) {
+        if (l.compare(0, urlencoded.length(), urlencoded) == 0)
+        {
             this->m_requestBodyType = WWWFormUrlEncoded;
-            m_variableReqbodyProcessor.set("URLENCODED", m_variableOffset);
+            m_anv->m_variableReqbodyProcessor.set("URLENCODED", m_anv->m_variableOffset);
         }
     }
 
-    if (keyl == "host") {
+    if (keyl == "host")
+    {
         std::vector<std::string> host = utils::string::split(value, ':');
-        m_variableServerName.set(host[0], m_variableOffset);
+        m_anv->m_variableServerName.set(host[0], m_anv->m_variableOffset);
     }
-    m_variableOffset = m_variableOffset + value.size() + 1;
+    m_anv->m_variableOffset = m_anv->m_variableOffset + value.size() + 1;
 
     return 1;
 }
@@ -591,11 +642,12 @@ int Transaction::addRequestHeader(const std::string& key,
  *
  */
 int Transaction::addRequestHeader(const unsigned char *key,
-    const unsigned char *value) {
+                                  const unsigned char *value)
+{
     return this->addRequestHeader(key,
-        strlen(reinterpret_cast<const char *>(key)),
-        value,
-        strlen(reinterpret_cast<const char *>(value)));
+                                  strlen(reinterpret_cast<const char *>(key)),
+                                  value,
+                                  strlen(reinterpret_cast<const char *>(value)));
 }
 
 
@@ -618,7 +670,8 @@ int Transaction::addRequestHeader(const unsigned char *key,
  *
  */
 int Transaction::addRequestHeader(const unsigned char *key, size_t key_n,
-    const unsigned char *value, size_t value_n) {
+                                  const unsigned char *value, size_t value_n)
+{
     std::string keys;
     std::string values;
 
@@ -640,154 +693,191 @@ int Transaction::addRequestHeader(const unsigned char *key, size_t key_n,
  * @note It is necessary to "append" the request body prior to the execution
  *       of this function.
  * @note Remember to check for a possible intervention.
- * 
+ *
  * @returns If the operation was successful or not.
  * @retval true Operation was successful.
  * @retval false Operation failed.
  *
  */
-int Transaction::processRequestBody() {
+int Transaction::processRequestBody()
+{
 #ifndef NO_LOGS
     debug(4, "Starting phase REQUEST_BODY. (SecRules 2)");
 #endif
 
-    if (getRuleEngineState() == RulesProperties::DisabledRuleEngine) {
+    if (getRuleEngineState() == RulesProperties::DisabledRuleEngine)
+    {
 #ifndef NO_LOGS
         debug(4, "Rule engine disabled, returning...");
 #endif
         return true;
     }
 
-    if (m_variableInboundDataError.m_value.empty() == true) {
-        m_variableInboundDataError.set("0", 0);
+    if (m_anv->m_variableInboundDataError.m_value.empty() == true)
+    {
+        m_anv->m_variableInboundDataError.set("0", 0);
     }
 
     /*
      * Process the request body even if there is nothing to be done.
-     * 
+     *
      * if (m_requestBody.tellp() <= 0) {
      *     return true;
      * }
-     * 
+     *
      */
-    std::unique_ptr<std::string> a = m_variableRequestHeaders.resolveFirst(
-        "Content-Type");
+    std::unique_ptr<std::string> a = m_anv->m_variableRequestHeaders.resolveFirst(
+                                         "Content-Type");
 #ifdef WITH_LIBXML2
-    if (m_requestBodyProcessor == XMLRequestBody) {
+    if (m_requestBodyProcessor == XMLRequestBody)
+    {
         std::string error;
-        if (m_xml->init() == true) {
+        if (m_xml->init() == true)
+        {
             m_xml->processChunk(m_requestBody.str().c_str(),
-                m_requestBody.str().size(),
-                &error);
+                                m_requestBody.str().size(),
+                                &error);
             m_xml->complete(&error);
         }
-        if (error.empty() == false) {
-            m_variableReqbodyError.set("1", m_variableOffset);
-            m_variableReqbodyErrorMsg.set("XML parsing error: " + error,
-                m_variableOffset);
-            m_variableReqbodyProcessorErrorMsg.set("XML parsing error: " \
-                + error, m_variableOffset);
-            m_variableReqbodyProcessorError.set("1", m_variableOffset);
-        } else {
-            m_variableReqbodyError.set("0", m_variableOffset);
-            m_variableReqbodyProcessorError.set("0", m_variableOffset);
+        if (error.empty() == false)
+        {
+            m_anv->m_variableReqbodyError.set("1", m_anv->m_variableOffset);
+            m_anv->m_variableReqbodyErrorMsg.set("XML parsing error: " + error,
+                                          m_anv->m_variableOffset);
+            m_anv->m_variableReqbodyProcessorErrorMsg.set("XML parsing error: " \
+                                                   + error, m_anv->m_variableOffset);
+            m_anv->m_variableReqbodyProcessorError.set("1", m_anv->m_variableOffset);
+        }
+        else
+        {
+            m_anv->m_variableReqbodyError.set("0", m_anv->m_variableOffset);
+            m_anv->m_variableReqbodyProcessorError.set("0", m_anv->m_variableOffset);
         }
 #endif
 #if WITH_YAJL
 #ifdef WITH_LIBXML2
-    } else if (m_requestBodyProcessor == JSONRequestBody) {
+    }
+    else if (m_requestBodyProcessor == JSONRequestBody)
+    {
 #else
-    if (m_requestBodyProcessor == JSONRequestBody) {
+        if (m_requestBodyProcessor == JSONRequestBody)
+        {
 #endif
         std::string error;
-        if (m_json->init() == true) {
+        if (m_json->init() == true)
+        {
             m_json->processChunk(m_requestBody.str().c_str(),
-                m_requestBody.str().size(),
-                &error);
+                                 m_requestBody.str().size(),
+                                 &error);
             m_json->complete(&error);
         }
-        if (error.empty() == false) {
-            m_variableReqbodyError.set("1", m_variableOffset);
-            m_variableReqbodyProcessorError.set("1", m_variableOffset);
-            m_variableReqbodyErrorMsg.set("JSON parsing error: " + error,
-                m_variableOffset);
-            m_variableReqbodyProcessorErrorMsg.set("JSON parsing error: " \
-                + error, m_variableOffset);
-        } else {
-            m_variableReqbodyError.set("0", m_variableOffset);
-            m_variableReqbodyProcessorError.set("0", m_variableOffset);
+        if (error.empty() == false)
+        {
+            m_anv->m_variableReqbodyError.set("1", m_anv->m_variableOffset);
+            m_anv->m_variableReqbodyProcessorError.set("1", m_anv->m_variableOffset);
+            m_anv->m_variableReqbodyErrorMsg.set("JSON parsing error: " + error,
+                                          m_anv->m_variableOffset);
+            m_anv->m_variableReqbodyProcessorErrorMsg.set("JSON parsing error: " \
+                                                   + error, m_anv->m_variableOffset);
+        }
+        else
+        {
+            m_anv->m_variableReqbodyError.set("0", m_anv->m_variableOffset);
+            m_anv->m_variableReqbodyProcessorError.set("0", m_anv->m_variableOffset);
         }
 #endif
 #if defined(WITH_LIBXML2) or defined(WITH_YAJL)
-    } else if (m_requestBodyType == MultiPartRequestBody) {
+    }
+    else if (m_requestBodyType == MultiPartRequestBody)
+    {
 #else
-    if (m_requestBodyType == MultiPartRequestBody) {
+        if (m_requestBodyType == MultiPartRequestBody)
+        {
 #endif
         std::string error;
-        if (a != NULL) {
+        if (a != NULL)
+        {
             Multipart m(*a, this);
-            if (m.init(&error) == true) {
-                m.process(m_requestBody.str(), &error, m_variableOffset);
+            if (m.init(&error) == true)
+            {
+                m.process(m_requestBody.str(), &error, m_anv->m_variableOffset);
             }
             m.multipart_complete(&error);
         }
-        if (error.empty() == false) {
-            m_variableReqbodyError.set("1", m_variableOffset);
-            m_variableReqbodyProcessorError.set("1", m_variableOffset);
-            m_variableReqbodyErrorMsg.set("Multipart parsing error: " + error,
-                m_variableOffset);
-            m_variableReqbodyProcessorErrorMsg.set("Multipart parsing " \
-                "error: " + error, m_variableOffset);
-        } else {
-            m_variableReqbodyError.set("0", m_variableOffset);
-            m_variableReqbodyProcessorError.set("0", m_variableOffset);
+        if (error.empty() == false)
+        {
+            m_anv->m_variableReqbodyError.set("1", m_anv->m_variableOffset);
+            m_anv->m_variableReqbodyProcessorError.set("1", m_anv->m_variableOffset);
+            m_anv->m_variableReqbodyErrorMsg.set("Multipart parsing error: " + error,
+                                          m_anv->m_variableOffset);
+            m_anv->m_variableReqbodyProcessorErrorMsg.set("Multipart parsing " \
+                                                   "error: " + error, m_anv->m_variableOffset);
         }
-    } else if (m_requestBodyType == WWWFormUrlEncoded) {
-        m_variableOffset++;
-        extractArguments("POST", m_requestBody.str(), m_variableOffset);
-    } else if (m_requestBodyType != UnknownFormat) {
+        else
+        {
+            m_anv->m_variableReqbodyError.set("0", m_anv->m_variableOffset);
+            m_anv->m_variableReqbodyProcessorError.set("0", m_anv->m_variableOffset);
+        }
+    }
+    else if (m_requestBodyType == WWWFormUrlEncoded)
+    {
+        m_anv->m_variableOffset++;
+        extractArguments("POST", m_requestBody.str(), m_anv->m_variableOffset);
+    }
+    else if (m_requestBodyType != UnknownFormat)
+    {
         /**
          * FIXME: double check to see if that is a valid scenario...
          *
          */
         std::string error;
-        if (a != NULL && a->empty() == false) {
+        if (a != NULL && a->empty() == false)
+        {
             error.assign(*a);
         }
 
-        m_variableReqbodyError.set("1", m_variableOffset);
-        m_variableReqbodyProcessorError.set("1", m_variableOffset);
-        m_variableReqbodyErrorMsg.set("Unknown request body processor: " \
-            + error, m_variableOffset);
-        m_variableReqbodyProcessorErrorMsg.set("Unknown request body " \
-            "processor: " + error, m_variableOffset);
-    } else {
-        m_variableReqbodyError.set("0", m_variableOffset);
-        m_variableReqbodyProcessorError.set("0", m_variableOffset);
+        m_anv->m_variableReqbodyError.set("1", m_anv->m_variableOffset);
+        m_anv->m_variableReqbodyProcessorError.set("1", m_anv->m_variableOffset);
+        m_anv->m_variableReqbodyErrorMsg.set("Unknown request body processor: " \
+                                      + error, m_anv->m_variableOffset);
+        m_anv->m_variableReqbodyProcessorErrorMsg.set("Unknown request body " \
+                                               "processor: " + error, m_anv->m_variableOffset);
+    }
+    else
+    {
+        m_anv->m_variableReqbodyError.set("0", m_anv->m_variableOffset);
+        m_anv->m_variableReqbodyProcessorError.set("0", m_anv->m_variableOffset);
     }
 
 #if 1
-    if (m_rules->m_secRequestBodyAccess != RulesProperties::TrueConfigBoolean) {
-        if (m_requestBodyAccess != RulesProperties::TrueConfigBoolean) {
+    if (m_rules->m_secRequestBodyAccess != RulesProperties::TrueConfigBoolean)
+    {
+        if (m_requestBodyAccess != RulesProperties::TrueConfigBoolean)
+        {
 #ifndef NO_LOGS
             debug(4, "Request body processing is disabled");
 #endif
 
             this->m_rules->evaluate(modsecurity::RequestBodyPhase, this);
             return true;
-        } else {
+        }
+        else
+        {
 #ifndef NO_LOGS
             debug(4, "Request body processing is disabled, but " \
-                "enabled to this transaction due to ctl:requestBodyAccess " \
-                "action");
+                  "enabled to this transaction due to ctl:requestBodyAccess " \
+                  "action");
 #endif
         }
-    } else {
-        if (m_requestBodyAccess == RulesProperties::FalseConfigBoolean) {
+    }
+    else
+    {
+        if (m_requestBodyAccess == RulesProperties::FalseConfigBoolean)
+        {
 #ifndef NO_LOGS
             debug(4, "Request body processing is enabled, but " \
-                "disable to this transaction due to ctl:requestBodyAccess " \
-                "action");
+                  "disable to this transaction due to ctl:requestBodyAccess " \
+                  "action");
 #endif
             this->m_rules->evaluate(modsecurity::RequestBodyPhase, this);
             return true;
@@ -801,8 +891,9 @@ int Transaction::processRequestBody() {
      */
     std::string fullRequest;
     std::vector<const VariableValue *> l;
-    m_variableRequestHeaders.resolve(&l);
-    for (auto &a : l) {
+    m_anv->m_variableRequestHeaders.resolve(&l);
+    for (auto &a : l)
+    {
         std::string z(a->m_key, 16, a->m_key.length() - 16);
         z = z + ": " + a->m_value;
         fullRequest = fullRequest + z + "\n";
@@ -811,15 +902,16 @@ int Transaction::processRequestBody() {
 
     fullRequest = fullRequest + "\n\n";
     fullRequest = fullRequest + m_requestBody.str();
-    m_variableFullRequest.set(fullRequest, m_variableOffset);
-    m_variableFullRequestLength.set(std::to_string(fullRequest.size()),
-        m_variableOffset);
+    m_anv->m_variableFullRequest.set(fullRequest, m_anv->m_variableOffset);
+    m_anv->m_variableFullRequestLength.set(std::to_string(fullRequest.size()),
+                                    m_anv->m_variableOffset);
 
-    if (m_requestBody.tellp() > 0) {
-        m_variableRequestBody.set(m_requestBody.str(), m_variableOffset);
-        m_variableRequestBodyLength.set(std::to_string(
-            m_requestBody.str().size()),
-            m_variableOffset, m_requestBody.str().size());
+    if (m_requestBody.tellp() > 0)
+    {
+        m_anv->m_variableRequestBody.set(m_requestBody.str(), m_anv->m_variableOffset);
+        m_anv->m_variableRequestBodyLength.set(std::to_string(
+                                            m_requestBody.str().size()),
+                                        m_anv->m_variableOffset, m_requestBody.str().size());
     }
 
     this->m_rules->evaluate(modsecurity::RequestBodyPhase, this);
@@ -833,7 +925,7 @@ int Transaction::processRequestBody() {
  *
  * With this method it is possible to feed ModSecurity with data for
  * inspection regarding the request body. There are two possibilities here:
- * 
+ *
  * 1 - Adds the buffer in a row;
  * 2 - Adds it in chunks;
  *
@@ -851,11 +943,13 @@ int Transaction::processRequestBody() {
  * @retval false Operation failed.
  *
  */
-int Transaction::requestBodyFromFile(const char *path) {
+int Transaction::requestBodyFromFile(const char *path)
+{
     std::ifstream request_body(path);
     std::string str;
 
-    if (request_body.is_open() == false) {
+    if (request_body.is_open() == false)
+    {
 #ifndef NO_LOGS
         debug(3, "Failed to open request body at: " + std::string(path));
 #endif
@@ -863,9 +957,12 @@ int Transaction::requestBodyFromFile(const char *path) {
     }
 
     request_body.seekg(0, std::ios::end);
-    try {
+    try
+    {
         str.reserve(request_body.tellg());
-    } catch (...) {
+    }
+    catch (...)
+    {
 #ifndef NO_LOGS
         debug(3, "Failed to allocate memory to load request body.");
 #endif
@@ -873,55 +970,61 @@ int Transaction::requestBodyFromFile(const char *path) {
     }
     request_body.seekg(0, std::ios::beg);
     str.assign((std::istreambuf_iterator<char>(request_body)),
-            std::istreambuf_iterator<char>());
+               std::istreambuf_iterator<char>());
 
     const char *buf = str.c_str();
     int len = request_body.tellg();
 
 #ifndef NO_LOGS
     debug(9, "Adding request body: " + std::to_string(len) + " bytes. " \
-        "Limit set to: "
-        + std::to_string(this->m_rules->m_requestBodyLimit.m_value));
+          "Limit set to: "
+          + std::to_string(this->m_rules->m_requestBodyLimit.m_value));
 #endif
 
     return appendRequestBody(reinterpret_cast<const unsigned char*>(buf), len);
 }
 
-int Transaction::appendRequestBody(const unsigned char *buf, size_t len) {
+int Transaction::appendRequestBody(const unsigned char *buf, size_t len)
+{
     int current_size = this->m_requestBody.tellp();
 
 #ifndef NO_LOGS
     debug(9, "Appending request body: " + std::to_string(len) + " bytes. " \
-        "Limit set to: "
-        + std::to_string(this->m_rules->m_requestBodyLimit.m_value));
+          "Limit set to: "
+          + std::to_string(this->m_rules->m_requestBodyLimit.m_value));
 #endif
 
     if (this->m_rules->m_requestBodyLimit.m_value > 0
-        && this->m_rules->m_requestBodyLimit.m_value < len + current_size) {
-        m_variableInboundDataError.set("1", m_variableOffset);
+            && this->m_rules->m_requestBodyLimit.m_value < len + current_size)
+    {
+        m_anv->m_variableInboundDataError.set("1", m_anv->m_variableOffset);
 #ifndef NO_LOGS
         debug(5, "Request body is bigger than the maximum expected.");
 #endif
         if (this->m_rules->m_requestBodyLimitAction ==
-            Rules::BodyLimitAction::ProcessPartialBodyLimitAction) {
+                Rules::BodyLimitAction::ProcessPartialBodyLimitAction)
+        {
             size_t spaceLeft = this->m_rules->m_requestBodyLimit.m_value
-                - current_size;
+                               - current_size;
             this->m_requestBody.write(reinterpret_cast<const char*>(buf),
-                spaceLeft);
+                                      spaceLeft);
 #ifndef NO_LOGS
             debug(5, "Request body limit is marked to process partial");
 #endif
             return false;
-        } else {
+        }
+        else
+        {
             if (this->m_rules->m_requestBodyLimitAction ==
-                Rules::BodyLimitAction::RejectBodyLimitAction) {
+                    Rules::BodyLimitAction::RejectBodyLimitAction)
+            {
 #ifndef NO_LOGS
                 debug(5, "Request body limit is marked to reject the " \
-                    "request");
+                      "request");
 #endif
                 intervention::free(&m_it);
                 m_it.log = strdup("Request body limit is marked to " \
-                        "reject the request");
+                                  "reject the request");
                 m_it.status = 403;
                 m_it.disruptive = true;
             }
@@ -946,22 +1049,24 @@ int Transaction::appendRequestBody(const unsigned char *buf, size_t len) {
  *
  * @param code The returned http code.
  * @param proto Protocol used on the response.
- * 
+ *
  * @returns If the operation was successful or not.
  * @retval true Operation was successful.
  * @retval false Operation failed.
  *
  */
-int Transaction::processResponseHeaders(int code, const std::string& proto) {
+int Transaction::processResponseHeaders(int code, const std::string& proto)
+{
 #ifndef NO_LOGS
     debug(4, "Starting phase RESPONSE_HEADERS. (SecRules 3)");
 #endif
 
     this->m_httpCodeReturned = code;
-    m_variableResponseStatus.set(std::to_string(code), m_variableOffset);
-    m_variableResponseProtocol.set(proto, m_variableOffset);
+    m_anv->m_variableResponseStatus.set(std::to_string(code), m_anv->m_variableOffset);
+    m_anv->m_variableResponseProtocol.set(proto, m_anv->m_variableOffset);
 
-    if (getRuleEngineState() == Rules::DisabledRuleEngine) {
+    if (getRuleEngineState() == Rules::DisabledRuleEngine)
+    {
 #ifndef NO_LOGS
         debug(4, "Rule engine disabled, returning...");
 #endif
@@ -992,16 +1097,19 @@ int Transaction::processResponseHeaders(int code, const std::string& proto) {
  *
  */
 int Transaction::addResponseHeader(const std::string& key,
-    const std::string& value) {
-    m_variableResponseHeadersNames.set(key, key, m_variableOffset);
-    m_variableResponseHeaders.set(key, value, m_variableOffset);
+                                   const std::string& value)
+{
+    m_anv->m_variableResponseHeadersNames.set(key, key, m_anv->m_variableOffset);
+    m_anv->m_variableResponseHeaders.set(key, value, m_anv->m_variableOffset);
 
-    if (utils::string::tolower(key) == "content-type") {
+    if (utils::string::tolower(key) == "content-type")
+    {
         // Removes the charset=...
         // Content-Type: text/html; charset=UTF-8
         std::vector<std::string> val = utils::string::split(value, ';');
-        if (val.size() > 0) {
-            m_variableResponseContentType.set(val[0], 0);
+        if (val.size() > 0)
+        {
+            m_anv->m_variableResponseContentType.set(val[0], 0);
         }
     }
     return 1;
@@ -1027,11 +1135,12 @@ int Transaction::addResponseHeader(const std::string& key,
  *
  */
 int Transaction::addResponseHeader(const unsigned char *key,
-    const unsigned char *value) {
+                                   const unsigned char *value)
+{
     return this->addResponseHeader(key,
-        strlen(reinterpret_cast<const char *>(key)),
-        value,
-        strlen(reinterpret_cast<const char *>(value)));
+                                   strlen(reinterpret_cast<const char *>(key)),
+                                   value,
+                                   strlen(reinterpret_cast<const char *>(value)));
 }
 
 
@@ -1046,14 +1155,15 @@ int Transaction::addResponseHeader(const unsigned char *key,
  * @param key_n   header name size.
  * @param value   header value.
  * @param value_n header value size.
- * 
+ *
  * @returns If the operation was successful or not.
  * @retval true Operation was successful.
  * @retval false Operation failed.
  *
  */
 int Transaction::addResponseHeader(const unsigned char *key, size_t key_n,
-    const unsigned char *value, size_t value_n) {
+                                   const unsigned char *value, size_t value_n)
+{
     std::string keys;
     std::string values;
 
@@ -1081,19 +1191,22 @@ int Transaction::addResponseHeader(const unsigned char *key, size_t key_n,
  * @retval false Operation failed.
  *
  */
-int Transaction::processResponseBody() {
+int Transaction::processResponseBody()
+{
 #ifndef NO_LOGS
     debug(4, "Starting phase RESPONSE_BODY. (SecRules 4)");
 #endif
 
-    if (getRuleEngineState() == Rules::DisabledRuleEngine) {
+    if (getRuleEngineState() == Rules::DisabledRuleEngine)
+    {
 #ifndef NO_LOGS
         debug(4, "Rule engine disabled, returning...");
 #endif
         return true;
     }
 
-    if (m_rules->m_secResponseBodyAccess != RulesProperties::TrueConfigBoolean) {
+    if (m_rules->m_secResponseBodyAccess != RulesProperties::TrueConfigBoolean)
+    {
 #ifndef NO_LOGS
         debug(4, "Response body is disabled, returning... " + std::to_string(m_rules->m_secResponseBodyAccess));
 #endif
@@ -1101,31 +1214,34 @@ int Transaction::processResponseBody() {
     }
 
     std::set<std::string> &bi = \
-        m_rules->m_responseBodyTypeToBeInspected.m_value;
-    auto t = bi.find(m_variableResponseContentType.m_value);
+                                m_rules->m_responseBodyTypeToBeInspected.m_value;
+    auto t = bi.find(m_anv->m_variableResponseContentType.m_value);
     if (t == bi.end()
-        && m_rules->m_responseBodyTypeToBeInspected.m_set == true) {
+            && m_rules->m_responseBodyTypeToBeInspected.m_set == true)
+    {
 #ifndef NO_LOGS
         debug(5, "Response Content-Type is " \
-            + m_variableResponseContentType.m_value \
-            + ". It is not marked to be inspected.");
+              + m_anv->m_variableResponseContentType.m_value \
+              + ". It is not marked to be inspected.");
         std::string validContetTypes("");
         for (std::set<std::string>::iterator i = bi.begin();
-             i != bi.end(); i++) {
+                i != bi.end(); i++)
+        {
             validContetTypes.append(*i + " ");
         }
         debug(8, "Content-Type(s) marked to be inspected: " \
-            + validContetTypes);
+              + validContetTypes);
 #endif
         return true;
     }
-    if (m_variableOutboundDataError.m_value.empty() == true) {
-        m_variableOutboundDataError.set("0", m_variableOffset);
+    if (m_anv->m_variableOutboundDataError.m_value.empty() == true)
+    {
+        m_anv->m_variableOutboundDataError.set("0", m_anv->m_variableOffset);
     }
 
-    m_variableResponseBody.set(m_responseBody.str(), m_variableOffset);
-    m_variableResponseContentLength.set(std::to_string(
-        m_responseBody.str().size()), m_variableOffset);
+    m_anv->m_variableResponseBody.set(m_responseBody.str(), m_anv->m_variableOffset);
+    m_anv->m_variableResponseContentLength.set(std::to_string(
+                                            m_responseBody.str().size()), m_anv->m_variableOffset);
 
     m_rules->evaluate(modsecurity::ResponseBodyPhase, this);
     return true;
@@ -1139,7 +1255,7 @@ int Transaction::processResponseBody() {
  * With this method it is possible to feed ModSecurity with data for
  * inspection regarding the response body. ModSecurity can also update the
  * contents of the response body, this is not quite ready yet on this version
- * of the API. 
+ * of the API.
  *
  * @note If the content is updated, the client cannot receive the content
  *       length header filled, at least not with the old values. Otherwise
@@ -1150,54 +1266,61 @@ int Transaction::processResponseBody() {
  * @retval false Operation failed, process partial demanded.
  *
  */
-int Transaction::appendResponseBody(const unsigned char *buf, size_t len) {
+int Transaction::appendResponseBody(const unsigned char *buf, size_t len)
+{
     int current_size = this->m_responseBody.tellp();
 
     std::set<std::string> &bi = \
-        this->m_rules->m_responseBodyTypeToBeInspected.m_value;
-    auto t = bi.find(m_variableResponseContentType.m_value);
-    if (t == bi.end() && bi.empty() == false) {
+                                this->m_rules->m_responseBodyTypeToBeInspected.m_value;
+    auto t = bi.find(m_anv->m_variableResponseContentType.m_value);
+    if (t == bi.end() && bi.empty() == false)
+    {
 #ifndef NO_LOGS
         debug(4, "Not appending response body. " \
-            "Response Content-Type is " \
-            + m_variableResponseContentType.m_value \
-            + ". It is not marked to be inspected.");
+              "Response Content-Type is " \
+              + m_anv->m_variableResponseContentType.m_value \
+              + ". It is not marked to be inspected.");
 #endif
         return true;
     }
 
 #ifndef NO_LOGS
     debug(9, "Appending response body: " + std::to_string(len + current_size)
-        + " bytes. Limit set to: " +
-        std::to_string(this->m_rules->m_responseBodyLimit.m_value));
+          + " bytes. Limit set to: " +
+          std::to_string(this->m_rules->m_responseBodyLimit.m_value));
 #endif
 
     if (this->m_rules->m_responseBodyLimit.m_value > 0
-        && this->m_rules->m_responseBodyLimit.m_value < len + current_size) {
-        m_variableOutboundDataError.set("1", m_variableOffset);
+            && this->m_rules->m_responseBodyLimit.m_value < len + current_size)
+    {
+        m_anv->m_variableOutboundDataError.set("1", m_anv->m_variableOffset);
 #ifndef NO_LOGS
         debug(5, "Response body is bigger than the maximum expected.");
 #endif
         if (this->m_rules->m_responseBodyLimitAction ==
-            Rules::BodyLimitAction::ProcessPartialBodyLimitAction) {
+                Rules::BodyLimitAction::ProcessPartialBodyLimitAction)
+        {
             size_t spaceLeft = this->m_rules->m_responseBodyLimit.m_value \
-                - current_size;
+                               - current_size;
             this->m_responseBody.write(reinterpret_cast<const char*>(buf),
-                spaceLeft);
+                                       spaceLeft);
 #ifndef NO_LOGS
             debug(5, "Response body limit is marked to process partial");
 #endif
             return false;
-        } else {
+        }
+        else
+        {
             if (this->m_rules->m_responseBodyLimitAction ==
-                Rules::BodyLimitAction::RejectBodyLimitAction) {
+                    Rules::BodyLimitAction::RejectBodyLimitAction)
+            {
 #ifndef NO_LOGS
                 debug(5, "Response body limit is marked to reject the " \
-                    "request");
+                      "request");
 #endif
                 intervention::free(&m_it);
                 m_it.log = strdup("Response body limit is marked to reject " \
-                    "the request");
+                                  "the request");
                 m_it.status = 403;
                 m_it.disruptive = true;
             }
@@ -1224,7 +1347,8 @@ int Transaction::appendResponseBody(const unsigned char *buf, size_t len) {
  * @retval NULL Nothing was updated.
  *
  */
-const char *Transaction::getResponseBody() {
+const char *Transaction::getResponseBody()
+{
     // int there_is_update = this->rules->loadResponseBodyFromJS(this);
     return this->m_responseBody.str().c_str();
 }
@@ -1240,7 +1364,8 @@ const char *Transaction::getResponseBody() {
  * @return Size of the update response body.
  *
  */
-size_t Transaction::getResponseBodyLength() {
+size_t Transaction::getResponseBodyLength()
+{
     size_t size = 0;
     m_responseBody.seekp(0, std::ios::end);
     size = m_responseBody.tellp();
@@ -1260,7 +1385,8 @@ size_t Transaction::getResponseBodyLength() {
  * @return Size of the request body.
  *
  */
-size_t Transaction::getRequestBodyLength() {
+size_t Transaction::getRequestBodyLength()
+{
     size_t size = 0;
 
     m_requestBody.seekp(0, std::ios::end);
@@ -1282,12 +1408,14 @@ size_t Transaction::getRequestBodyLength() {
  * @retval false Operation failed.
  *
  */
-int Transaction::processLogging() {
+int Transaction::processLogging()
+{
 #ifndef NO_LOGS
     debug(4, "Starting phase LOGGING. (SecRules 5)");
 #endif
 
-    if (getRuleEngineState() == Rules::DisabledRuleEngine) {
+    if (getRuleEngineState() == Rules::DisabledRuleEngine)
+    {
 #ifndef NO_LOGS
         debug(4, "Rule engine disabled, returning...");
 #endif
@@ -1297,43 +1425,50 @@ int Transaction::processLogging() {
     this->m_rules->evaluate(modsecurity::LoggingPhase, this);
 
     /* If relevant, save this transaction information at the audit_logs */
-    if (m_rules != NULL && m_rules->m_auditLog != NULL) {
+    if (m_rules != NULL && m_rules->m_auditLog != NULL)
+    {
         int parts = this->m_rules->m_auditLog->getParts();
 #ifndef NO_LOGS
         debug(8, "Checking if this request is suitable to be " \
-            "saved as an audit log.");
+              "saved as an audit log.");
 #endif
 
-        if (this->m_auditLogModifier.size() > 0) {
+        if (this->m_auditLogModifier.size() > 0)
+        {
 #ifndef NO_LOGS
             debug(4, "There was an audit log modifier for this transaction.");
 #endif
             std::list<std::pair<int, std::string>>::iterator it;
 #ifndef NO_LOGS
             debug(7, "AuditLog parts before modification(s): " +
-                std::to_string(parts) + ".");
+                  std::to_string(parts) + ".");
 #endif
             for (it = m_auditLogModifier.begin();
-                it != m_auditLogModifier.end(); ++it) {
+                    it != m_auditLogModifier.end(); ++it)
+            {
                 std::pair <int, std::string> p = *it;
-                if (p.first == 0) {  // Add
+                if (p.first == 0)    // Add
+                {
                     parts = this->m_rules->m_auditLog->addParts(parts,
-                        p.second);
-                } else {  // Remove
+                            p.second);
+                }
+                else      // Remove
+                {
                     parts = this->m_rules->m_auditLog->removeParts(parts,
-                        p.second);
+                            p.second);
                 }
             }
         }
 #ifndef NO_LOGS
         debug(8, "Checking if this request is relevant to be " \
-            "part of the audit logs.");
+              "part of the audit logs.");
 #endif
         bool saved = this->m_rules->m_auditLog->saveIfRelevant(this, parts);
-        if (saved) {
+        if (saved)
+        {
 #ifndef NO_LOGS
             debug(8, "Request was relevant to be saved. Parts: " +
-                std::to_string(parts));
+                  std::to_string(parts));
 #endif
         }
     }
@@ -1353,19 +1488,23 @@ int Transaction::processLogging() {
  * @retval false Nothing to be done.
  *
  */
-bool Transaction::intervention(ModSecurityIntervention *it) {
-    if (m_it.disruptive) {
-        if (m_it.url) {
+bool Transaction::intervention(ModSecurityIntervention *it)
+{
+    if (m_it.disruptive)
+    {
+        if (m_it.url)
+        {
             it->url = strdup(m_it.url);
         }
         it->disruptive = m_it.disruptive;
         it->status = m_it.status;
 
-        if (m_it.log != NULL) {
+        if (m_it.log != NULL)
+        {
             std::string log("");
             log.append(m_it.log);
             utils::string::replaceAll(&log, std::string("%d"),
-                std::to_string(it->status));
+                                      std::to_string(it->status));
             it->log = strdup(log.c_str());
         }
         intervention::reset(&m_it);
@@ -1376,7 +1515,8 @@ bool Transaction::intervention(ModSecurityIntervention *it) {
 
 
 std::string Transaction::toOldAuditLogFormatIndex(const std::string &filename,
-    double size, const std::string &md5) {
+        double size, const std::string &md5)
+{
     std::stringstream ss;
     struct tm timeinfo;
     char tstr[300];
@@ -1387,8 +1527,8 @@ std::string Transaction::toOldAuditLogFormatIndex(const std::string &filename,
     strftime(tstr, 299, "[%d/%b/%Y:%H:%M:%S %z]", &timeinfo);
 
     ss << utils::string::dash_if_empty(
-       m_variableRequestHeaders.resolveFirst("Host").get())
-        << " ";
+           m_anv->m_variableRequestHeaders.resolveFirst("Host").get())
+       << " ";
     ss << utils::string::dash_if_empty(this->m_clientIpAddress.c_str()) << " ";
     /** TODO: Check variable */
     Variables::RemoteUser *r = new Variables::RemoteUser("REMOTE_USER");
@@ -1396,8 +1536,7 @@ std::string Transaction::toOldAuditLogFormatIndex(const std::string &filename,
     r->evaluate(this, NULL, &l);
     delete r;
 
-    ss << utils::string::dash_if_empty(
-        m_variableRemoteUser.c_str());
+    ss << utils::string::dash_if_empty(m_variableRemoteUser.c_str());
     ss << " ";
     /** TODO: Check variable */
     //ss << utils::string::dash_if_empty(
@@ -1406,7 +1545,7 @@ std::string Transaction::toOldAuditLogFormatIndex(const std::string &filename,
     ss << tstr << " ";
 
     ss << "\"";
-    ss << utils::string::dash_if_empty(m_variableRequestMethod.evaluate());
+    ss << utils::string::dash_if_empty(m_anv->m_variableRequestMethod.evaluate());
     ss << " ";
     ss << this->m_uri.c_str() << " ";
     ss << "HTTP/" << m_httpVersion.c_str();
@@ -1416,15 +1555,15 @@ std::string Transaction::toOldAuditLogFormatIndex(const std::string &filename,
     ss << this->m_responseBody.tellp() << " ";
     /** TODO: Check variable */
     ss << utils::string::dash_if_empty(
-        m_variableRequestHeaders.resolveFirst("REFERER").get()) << " ";
+           m_anv->m_variableRequestHeaders.resolveFirst("REFERER").get()) << " ";
     ss << "\"";
     ss << utils::string::dash_if_empty(
-        m_variableRequestHeaders.resolveFirst("User-Agent").get());
+           m_anv->m_variableRequestHeaders.resolveFirst("User-Agent").get());
     ss << "\" ";
     ss << this->m_id << " ";
     /** TODO: Check variable */
     ss << utils::string::dash_if_empty(
-        m_variableRequestHeaders.resolveFirst("REFERER").get()) << " ";
+           m_anv->m_variableRequestHeaders.resolveFirst("REFERER").get()) << " ";
 
     ss << filename << " ";
     ss << "0" << " ";
@@ -1436,7 +1575,8 @@ std::string Transaction::toOldAuditLogFormatIndex(const std::string &filename,
 
 
 std::string Transaction::toOldAuditLogFormat(int parts,
-    const std::string &trailer) {
+        const std::string &trailer)
+{
     std::stringstream audit_log;
     struct tm timeinfo;
     char tstr[300];
@@ -1454,16 +1594,18 @@ std::string Transaction::toOldAuditLogFormat(int parts,
     audit_log << " " << this->m_serverPort;
     audit_log << std::endl;
 
-    if (parts & audit_log::AuditLog::BAuditLogPart) {
+    if (parts & audit_log::AuditLog::BAuditLogPart)
+    {
         std::vector<const VariableValue *> l;
         audit_log << "--" << trailer << "-" << "B--" << std::endl;
         audit_log << utils::string::dash_if_empty(
-            m_variableRequestMethod.evaluate());
+                      m_anv->m_variableRequestMethod.evaluate());
         audit_log << " " << this->m_uri.c_str() << " " << "HTTP/";
         audit_log << this->m_httpVersion.c_str() << std::endl;
 
-        m_variableRequestHeaders.resolve(&l);
-        for (auto &h : l) {
+        m_anv->m_variableRequestHeaders.resolve(&l);
+        for (auto &h : l)
+        {
             size_t pos = strlen("REQUEST_HEADERS:");
             audit_log << h->m_key.c_str() + pos << ": ";
             audit_log << h->m_value.c_str() << std::endl;
@@ -1472,36 +1614,43 @@ std::string Transaction::toOldAuditLogFormat(int parts,
         audit_log << std::endl;
     }
     if (parts & audit_log::AuditLog::CAuditLogPart
-        &&  m_requestBody.tellp() > 0) {
+            &&  m_requestBody.tellp() > 0)
+    {
         std::string body =  m_requestBody.str();
         audit_log << "--" << trailer << "-" << "C--" << std::endl;
-        if (body.size() > 0) {
+        if (body.size() > 0)
+        {
             audit_log << body << std::endl;
         }
         audit_log << std::endl;
     }
-    if (parts & audit_log::AuditLog::DAuditLogPart) {
+    if (parts & audit_log::AuditLog::DAuditLogPart)
+    {
         audit_log << "--" << trailer << "-" << "D--" << std::endl;
         audit_log << std::endl;
         /** TODO: write audit_log D part. */
     }
     if (parts & audit_log::AuditLog::EAuditLogPart
-        && m_responseBody.tellp() > 0) {
+            && m_responseBody.tellp() > 0)
+    {
         std::string body = utils::string::toHexIfNeeded(m_responseBody.str());
         audit_log << "--" << trailer << "-" << "E--" << std::endl;
-        if (body.size() > 0) {
+        if (body.size() > 0)
+        {
             audit_log << body << std::endl;
         }
         audit_log << std::endl;
     }
-    if (parts & audit_log::AuditLog::FAuditLogPart) {
+    if (parts & audit_log::AuditLog::FAuditLogPart)
+    {
         std::vector<const VariableValue *> l;
 
         audit_log << "--" << trailer << "-" << "F--" << std::endl;
         audit_log << "HTTP/" << m_httpVersion.c_str()  << " ";
         audit_log << this->m_httpCodeReturned << std::endl;
-        m_variableResponseHeaders.resolve(&l);
-        for (auto &h : l) {
+        m_anv->m_variableResponseHeaders.resolve(&l);
+        for (auto &h : l)
+        {
             size_t pos = strlen("RESPONSE_HEADERS:");
             audit_log << h->m_key.c_str() + pos << ": ";
             audit_log << h->m_value.c_str() << std::endl;
@@ -1510,30 +1659,36 @@ std::string Transaction::toOldAuditLogFormat(int parts,
     }
     audit_log << std::endl;
 
-    if (parts & audit_log::AuditLog::GAuditLogPart) {
+    if (parts & audit_log::AuditLog::GAuditLogPart)
+    {
         audit_log << "--" << trailer << "-" << "G--" << std::endl;
         audit_log << std::endl;
         /** TODO: write audit_log G part. */
     }
-    if (parts & audit_log::AuditLog::HAuditLogPart) {
+    if (parts & audit_log::AuditLog::HAuditLogPart)
+    {
         audit_log << "--" << trailer << "-" << "H--" << std::endl;
-        for (auto a : m_rulesMessages) {
+        for (auto a : m_rulesMessages)
+        {
             audit_log << a.log(0, m_httpCodeReturned) << std::endl;
         }
         audit_log << std::endl;
         /** TODO: write audit_log H part. */
     }
-    if (parts & audit_log::AuditLog::IAuditLogPart) {
+    if (parts & audit_log::AuditLog::IAuditLogPart)
+    {
         audit_log << "--" << trailer << "-" << "I--" << std::endl;
         audit_log << std::endl;
         /** TODO: write audit_log I part. */
     }
-    if (parts & audit_log::AuditLog::JAuditLogPart) {
+    if (parts & audit_log::AuditLog::JAuditLogPart)
+    {
         audit_log << "--" << trailer << "-" << "J--" << std::endl;
         audit_log << std::endl;
         /** TODO: write audit_log J part. */
     }
-    if (parts & audit_log::AuditLog::KAuditLogPart) {
+    if (parts & audit_log::AuditLog::KAuditLogPart)
+    {
         audit_log << "--" << trailer << "-" << "K--" << std::endl;
         audit_log << std::endl;
         /** TODO: write audit_log K part. */
@@ -1544,7 +1699,8 @@ std::string Transaction::toOldAuditLogFormat(int parts,
 }
 
 
-std::string Transaction::toJSON(int parts) {
+std::string Transaction::toJSON(int parts)
+{
 #ifdef WITH_YAJL
     const unsigned char *buf;
     size_t len;
@@ -1554,8 +1710,9 @@ std::string Transaction::toJSON(int parts) {
     std::string uniqueId = UniqueId::uniqueId();
 
     g = yajl_gen_alloc(NULL);
-    if (g == NULL) {
-      return "";
+    if (g == NULL)
+    {
+        return "";
     }
     yajl_gen_config(g, yajl_gen_beautify, 0);
 
@@ -1564,7 +1721,7 @@ std::string Transaction::toJSON(int parts) {
 
     /* trasaction */
     yajl_gen_string(g, reinterpret_cast<const unsigned char*>("transaction"),
-        strlen("transaction"));
+                    strlen("transaction"));
 
     yajl_gen_map_open(g);
     /* Part: A (header mandatory) */
@@ -1578,30 +1735,33 @@ std::string Transaction::toJSON(int parts) {
 
     /* request */
     yajl_gen_string(g, reinterpret_cast<const unsigned char*>("request"),
-        strlen("request"));
+                    strlen("request"));
     yajl_gen_map_open(g);
 
     LOGFY_ADD("method",
-        utils::string::dash_if_empty(
-            m_variableRequestMethod.evaluate()).c_str());
+              utils::string::dash_if_empty(
+                  m_anv->m_variableRequestMethod.evaluate()).c_str());
 
     LOGFY_ADD_INT("http_version", m_httpVersion.c_str());
     LOGFY_ADD("uri", this->m_uri.c_str());
 
-    if (parts & audit_log::AuditLog::CAuditLogPart) {
+    if (parts & audit_log::AuditLog::CAuditLogPart)
+    {
         // FIXME: check for the binary content size.
         LOGFY_ADD("body", this->m_requestBody.str().c_str());
     }
 
     /* request headers */
-    if (parts & audit_log::AuditLog::BAuditLogPart) {
+    if (parts & audit_log::AuditLog::BAuditLogPart)
+    {
         std::vector<const VariableValue *> l;
         yajl_gen_string(g, reinterpret_cast<const unsigned char*>("headers"),
-            strlen("headers"));
+                        strlen("headers"));
         yajl_gen_map_open(g);
 
-        m_variableRequestHeaders.resolve(&l);
-        for (auto &h : l) {
+        m_anv->m_variableRequestHeaders.resolve(&l);
+        for (auto &h : l)
+        {
             size_t pos = strlen("REQUEST_HEADERS:");
             LOGFY_ADD(h->m_key.c_str() + pos, h->m_value.c_str());
             delete h;
@@ -1616,23 +1776,26 @@ std::string Transaction::toJSON(int parts) {
 
     /* response */
     yajl_gen_string(g, reinterpret_cast<const unsigned char*>("response"),
-        strlen("response"));
+                    strlen("response"));
     yajl_gen_map_open(g);
 
-    if (parts & audit_log::AuditLog::GAuditLogPart) {
+    if (parts & audit_log::AuditLog::GAuditLogPart)
+    {
         LOGFY_ADD("body", this->m_responseBody.str().c_str());
     }
     LOGFY_ADD_NUM("http_code", m_httpCodeReturned);
 
     /* response headers */
-    if (parts & audit_log::AuditLog::FAuditLogPart) {
+    if (parts & audit_log::AuditLog::FAuditLogPart)
+    {
         std::vector<const VariableValue *> l;
         yajl_gen_string(g, reinterpret_cast<const unsigned char*>("headers"),
-            strlen("headers"));
+                        strlen("headers"));
         yajl_gen_map_open(g);
 
-        m_variableResponseHeaders.resolve(&l);
-        for (auto &h : l) {
+        m_anv->m_variableResponseHeaders.resolve(&l);
+        for (auto &h : l)
+        {
             size_t pos = strlen("RESPONSE_HEADERS:");
             LOGFY_ADD(h->m_key.c_str() + pos, h->m_value.c_str());
             delete h;
@@ -1645,9 +1808,10 @@ std::string Transaction::toJSON(int parts) {
     yajl_gen_map_close(g);
 
     /* producer */
-    if (parts & audit_log::AuditLog::HAuditLogPart) {
+    if (parts & audit_log::AuditLog::HAuditLogPart)
+    {
         yajl_gen_string(g, reinterpret_cast<const unsigned char*>("producer"),
-            strlen("producer"));
+                        strlen("producer"));
         yajl_gen_map_open(g);
 
         /* producer > libmodsecurity */
@@ -1658,19 +1822,20 @@ std::string Transaction::toJSON(int parts) {
 
         /* producer > engine state */
         LOGFY_ADD("secrules_engine",
-            Rules::ruleEngineStateString(
-            (RulesProperties::RuleEngine) getRuleEngineState()));
+                  Rules::ruleEngineStateString(
+                      (RulesProperties::RuleEngine) getRuleEngineState()));
 
         /* producer > components */
         yajl_gen_string(g,
-            reinterpret_cast<const unsigned char*>("components"),
-            strlen("components"));
+                        reinterpret_cast<const unsigned char*>("components"),
+                        strlen("components"));
 
         yajl_gen_array_open(g);
-        for (auto a : m_rules->m_components) {
+        for (auto a : m_rules->m_components)
+        {
             yajl_gen_string(g,
-                reinterpret_cast<const unsigned char*>
-                    (a.c_str()), a.length());
+                            reinterpret_cast<const unsigned char*>
+                            (a.c_str()), a.length());
         }
         yajl_gen_array_close(g);
 
@@ -1679,15 +1844,16 @@ std::string Transaction::toJSON(int parts) {
 
         /* messages */
         yajl_gen_string(g,
-            reinterpret_cast<const unsigned char*>("messages"),
-            strlen("messages"));
+                        reinterpret_cast<const unsigned char*>("messages"),
+                        strlen("messages"));
         yajl_gen_array_open(g);
-        for (auto a : m_rulesMessages) {
+        for (auto a : m_rulesMessages)
+        {
             yajl_gen_map_open(g);
             LOGFY_ADD("message", a.m_message.c_str());
             yajl_gen_string(g,
-                reinterpret_cast<const unsigned char*>("details"),
-                strlen("details"));
+                            reinterpret_cast<const unsigned char*>("details"),
+                            strlen("details"));
             yajl_gen_map_open(g);
             LOGFY_ADD("match", a.m_match.c_str());
             LOGFY_ADD("reference", a.m_reference.c_str());
@@ -1700,13 +1866,14 @@ std::string Transaction::toJSON(int parts) {
             LOGFY_ADD("rev", a.m_rev.c_str());
 
             yajl_gen_string(g,
-                reinterpret_cast<const unsigned char*>("tags"),
-                strlen("tags"));
+                            reinterpret_cast<const unsigned char*>("tags"),
+                            strlen("tags"));
             yajl_gen_array_open(g);
-            for (auto b : a.m_tags) {
+            for (auto b : a.m_tags)
+            {
                 yajl_gen_string(g,
-                    reinterpret_cast<const unsigned char*>(b.c_str()),
-                    strlen(b.c_str()));
+                                reinterpret_cast<const unsigned char*>(b.c_str()),
+                                strlen(b.c_str()));
             }
             yajl_gen_array_close(g);
 
@@ -1735,18 +1902,21 @@ std::string Transaction::toJSON(int parts) {
     return log;
 #else
     return std::string("{\"error\":\"ModSecurity was " \
-        "not compiled with JSON support.\"}");
+                       "not compiled with JSON support.\"}");
 #endif
 }
 
 
-void Transaction::serverLog(std::shared_ptr<RuleMessage> rm) {
+void Transaction::serverLog(std::shared_ptr<RuleMessage> rm)
+{
     m_ms->serverLog(m_logCbData, rm);
 }
 
 
-int Transaction::getRuleEngineState() {
-    if (m_secRuleEngine == RulesProperties::PropertyNotSetRuleEngine) {
+int Transaction::getRuleEngineState()
+{
+    if (m_secRuleEngine == RulesProperties::PropertyNotSetRuleEngine)
+    {
         return m_rules->m_secRuleEngine;
     }
 
@@ -1769,9 +1939,10 @@ int Transaction::getRuleEngineState() {
  * @retval false Operation failed.
  *
  */
-int Transaction::updateStatusCode(int code) {
+int Transaction::updateStatusCode(int code)
+{
     this->m_httpCodeReturned = code;
-    m_variableResponseStatus.set(std::to_string(code), m_variableOffset);
+    m_anv->m_variableResponseStatus.set(std::to_string(code), m_anv->m_variableOffset);
 
     return true;
 }
@@ -1783,7 +1954,7 @@ int Transaction::updateStatusCode(int code) {
  *
  * The transaction is the unit that will be used the inspect every request. It holds
  * all the information for a given request.
- * 
+ *
  * @note Remember to cleanup the transaction when the transaction is complete.
  *
  * @param ms ModSecurity core pointer.
@@ -1797,7 +1968,8 @@ int Transaction::updateStatusCode(int code) {
  *
  */
 extern "C" Transaction *msc_new_transaction(ModSecurity *ms,
-    Rules *rules, void *logCbData) {
+        Rules *rules, void *logCbData)
+{
     return new Transaction(ms, rules, logCbData);
 }
 
@@ -1824,7 +1996,8 @@ extern "C" Transaction *msc_new_transaction(ModSecurity *ms,
  *
  */
 extern "C" int msc_process_connection(Transaction *transaction,
-    const char *client, int cPort, const char *server, int sPort) {
+                                      const char *client, int cPort, const char *server, int sPort)
+{
     return transaction->processConnection(client, cPort, server, sPort);
 }
 
@@ -1853,7 +2026,8 @@ extern "C" int msc_process_connection(Transaction *transaction,
  *
  */
 extern "C" int msc_process_uri(Transaction *transaction, const char *uri,
-    const char *protocol, const char *http_version) {
+                               const char *protocol, const char *http_version)
+{
     return transaction->processURI(uri, protocol, http_version);
 }
 
@@ -1874,7 +2048,8 @@ extern "C" int msc_process_uri(Transaction *transaction, const char *uri,
  * @retval 0 Operation failed.
  *
  */
-extern "C" int msc_process_request_headers(Transaction *transaction) {
+extern "C" int msc_process_request_headers(Transaction *transaction)
+{
     return transaction->processRequestHeaders();
 }
 
@@ -1892,13 +2067,14 @@ extern "C" int msc_process_request_headers(Transaction *transaction) {
  * @note Remember to check for a possible intervention.
  *
  * @param transaction ModSecurity transaction.
- * 
+ *
  * @returns If the operation was successful or not.
  * @retval 1 Operation was successful.
  * @retval 0 Operation failed.
  *
  */
-extern "C" int msc_process_request_body(Transaction *transaction) {
+extern "C" int msc_process_request_body(Transaction *transaction)
+{
     return transaction->processRequestBody();
 }
 
@@ -1909,7 +2085,7 @@ extern "C" int msc_process_request_body(Transaction *transaction) {
  *
  * With this function it is possible to feed ModSecurity with data for
  * inspection regarding the request body. There are two possibilities here:
- * 
+ *
  * 1 - Adds the buffer in a row;
  * 2 - Adds it in chunks;
  *
@@ -1923,20 +2099,22 @@ extern "C" int msc_process_request_body(Transaction *transaction) {
  *       in this case is upon the rules.
  *
  * @param transaction ModSecurity transaction.
- * 
+ *
  * @returns If the operation was successful or not.
  * @retval 1 Operation was successful.
  * @retval 0 Operation failed.
  *
  */
 extern "C" int msc_append_request_body(Transaction *transaction,
-    const unsigned char *buf, size_t len) {
+                                       const unsigned char *buf, size_t len)
+{
     return transaction->appendRequestBody(buf, len);
 }
 
 
 extern "C" int msc_request_body_from_file(Transaction *transaction,
-    const char *path) {
+        const char *path)
+{
     return transaction->requestBodyFromFile(path);
 }
 
@@ -1958,7 +2136,8 @@ extern "C" int msc_request_body_from_file(Transaction *transaction,
  *
  */
 extern "C" int msc_process_response_headers(Transaction *transaction,
-    int code, const char* protocol) {
+        int code, const char* protocol)
+{
     return transaction->processResponseHeaders(code, protocol);
 }
 
@@ -1982,7 +2161,8 @@ extern "C" int msc_process_response_headers(Transaction *transaction,
  * @retval 0 Operation failed.
  *
  */
-extern "C" int msc_process_response_body(Transaction *transaction) {
+extern "C" int msc_process_response_body(Transaction *transaction)
+{
     return transaction->processResponseBody();
 }
 
@@ -1994,7 +2174,7 @@ extern "C" int msc_process_response_body(Transaction *transaction) {
  * With this function it is possible to feed ModSecurity with data for
  * inspection regarding the response body. ModSecurity can also update the
  * contents of the response body, this is not quite ready yet on this version
- * of the API. 
+ * of the API.
  *
  * @note If the content is updated, the client cannot receive the content
  *       length header filled, at least not with the old values. Otherwise
@@ -2008,7 +2188,8 @@ extern "C" int msc_process_response_body(Transaction *transaction) {
  *
  */
 extern "C" int msc_append_response_body(Transaction *transaction,
-    const unsigned char *buf, size_t len) {
+                                        const unsigned char *buf, size_t len)
+{
     return transaction->appendResponseBody(buf, len);
 }
 
@@ -2032,8 +2213,9 @@ extern "C" int msc_append_response_body(Transaction *transaction,
  *
  */
 extern "C" int msc_add_request_header(Transaction *transaction,
-    const unsigned char *key,
-    const unsigned char *value) {
+                                      const unsigned char *key,
+                                      const unsigned char *value)
+{
     return transaction->addRequestHeader(key, value);
 }
 
@@ -2057,8 +2239,9 @@ extern "C" int msc_add_request_header(Transaction *transaction,
  *
  */
 extern "C" int msc_add_n_request_header(Transaction *transaction,
-    const unsigned char *key,
-    size_t key_len, const unsigned char *value, size_t value_len) {
+                                        const unsigned char *key,
+                                        size_t key_len, const unsigned char *value, size_t value_len)
+{
     return transaction->addRequestHeader(key, key_len, value, value_len);
 }
 
@@ -2083,8 +2266,9 @@ extern "C" int msc_add_n_request_header(Transaction *transaction,
  *
  */
 extern "C" int msc_add_response_header(Transaction *transaction,
-    const unsigned char *key,
-    const unsigned char *value) {
+                                       const unsigned char *key,
+                                       const unsigned char *value)
+{
     return transaction->addResponseHeader(key, value);
 }
 
@@ -2101,15 +2285,16 @@ extern "C" int msc_add_response_header(Transaction *transaction,
  * @param key_len header name size.
  * @param value   header value.
  * @param val_len header value size.
- * 
+ *
  * @returns If the operation was successful or not.
  * @retval 1 Operation was successful.
  * @retval 0 Operation failed.
  *
  */
 extern "C" int msc_add_n_response_header(Transaction *transaction,
-    const unsigned char *key, size_t key_len, const unsigned char *value,
-    size_t value_len) {
+        const unsigned char *key, size_t key_len, const unsigned char *value,
+        size_t value_len)
+{
     return transaction->addResponseHeader(key, key_len, value, value_len);
 }
 
@@ -2128,7 +2313,8 @@ extern "C" int msc_add_n_response_header(Transaction *transaction,
  * @retval 0 Operation failed.
  *
  */
-extern "C" void msc_transaction_cleanup(Transaction *transaction) {
+extern "C" void msc_transaction_cleanup(Transaction *transaction)
+{
     delete transaction;
 }
 
@@ -2147,7 +2333,8 @@ extern "C" void msc_transaction_cleanup(Transaction *transaction) {
  *
  */
 extern "C" int msc_intervention(Transaction *transaction,
-    ModSecurityIntervention *it) {
+                                ModSecurityIntervention *it)
+{
     return transaction->intervention(it);
 }
 
@@ -2167,7 +2354,8 @@ extern "C" int msc_intervention(Transaction *transaction,
  * @retval NULL Nothing was updated.
  *
  */
-extern "C" const char *msc_get_response_body(Transaction *transaction) {
+extern "C" const char *msc_get_response_body(Transaction *transaction)
+{
     return transaction->getResponseBody();
 }
 
@@ -2183,7 +2371,8 @@ extern "C" const char *msc_get_response_body(Transaction *transaction) {
  * @return Size of the response body.
  *
  */
-extern "C" size_t msc_get_response_body_length(Transaction *transaction) {
+extern "C" size_t msc_get_response_body_length(Transaction *transaction)
+{
     return transaction->getResponseBodyLength();
 }
 
@@ -2198,7 +2387,8 @@ extern "C" size_t msc_get_response_body_length(Transaction *transaction) {
  * @return Size of the request body.
  *
  */
-extern "C" size_t msc_get_request_body_length(Transaction *transaction) {
+extern "C" size_t msc_get_request_body_length(Transaction *transaction)
+{
     return transaction->getRequestBodyLength();
 }
 
@@ -2216,7 +2406,8 @@ extern "C" size_t msc_get_request_body_length(Transaction *transaction) {
  * @retval 0 Operation failed.
  *
  */
-extern "C" int msc_process_logging(Transaction *transaction) {
+extern "C" int msc_process_logging(Transaction *transaction)
+{
     return transaction->processLogging();
 }
 
@@ -2235,7 +2426,8 @@ extern "C" int msc_process_logging(Transaction *transaction) {
  * @retval 0 Operation failed.
  *
  */
-extern "C" int msc_update_status_code(Transaction *transaction, int status) {
+extern "C" int msc_update_status_code(Transaction *transaction, int status)
+{
     return transaction->updateStatusCode(status);
 }
 

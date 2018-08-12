@@ -46,10 +46,10 @@ void TimeYear::evaluate(Transaction *transaction,
     localtime_r(&timer, &timeinfo);
     strftime(tstr, 200, "%Y", &timeinfo);
 
-    transaction->m_variableTimeYear.assign(tstr);
+    (*transaction)->m_variableTimeYear.assign(tstr);
 
     l->push_back(new VariableValue(&m_retName,
-        &transaction->m_variableTimeYear));
+        &(*transaction)->m_variableTimeYear));
 }
 
 

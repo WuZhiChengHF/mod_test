@@ -188,11 +188,11 @@ void Rule::updateMatchedVars(Transaction *trans, std::string key,
 #ifndef NO_LOGS
     trans->debug(9, "Matched vars updated.");
 #endif
-    trans->m_variableMatchedVar.set(value, trans->m_variableOffset);
-    trans->m_variableMatchedVarName.set(key, trans->m_variableOffset);
+    (*trans)->m_variableMatchedVar.set(value, (*trans)->m_variableOffset);
+    (*trans)->m_variableMatchedVarName.set(key, (*trans)->m_variableOffset);
 
-    trans->m_variableMatchedVars.set(key, value, trans->m_variableOffset);
-    trans->m_variableMatchedVarsNames.set(key, key, trans->m_variableOffset);
+    (*trans)->m_variableMatchedVars.set(key, value, (*trans)->m_variableOffset);
+    (*trans)->m_variableMatchedVarsNames.set(key, key, (*trans)->m_variableOffset);
 }
 
 
@@ -200,38 +200,38 @@ void Rule::cleanMatchedVars(Transaction *trans) {
 #ifndef NO_LOGS
     trans->debug(9, "Matched vars cleaned.");
 #endif
-    trans->m_variableMatchedVar.unset();
-    trans->m_variableMatchedVars.unset();
-    trans->m_variableMatchedVarName.unset();
-    trans->m_variableMatchedVarsNames.unset();
+    (*trans)->m_variableMatchedVar.unset();
+    (*trans)->m_variableMatchedVars.unset();
+    (*trans)->m_variableMatchedVarName.unset();
+    (*trans)->m_variableMatchedVarsNames.unset();
 }
 
 
 void Rule::updateRulesVariable(Transaction *trans) {
     if (m_ruleId != 0) {
-        trans->m_variableRule.set("id",
+        (*trans)->m_variableRule.set("id",
             std::to_string(m_ruleId), 0);
     }
     if (m_rev.empty() == false) {
-        trans->m_variableRule.set("rev",
+        (*trans)->m_variableRule.set("rev",
             m_rev, 0);
     }
     if (getActionsByName("msg").size() > 0) {
         actions::Msg *msg = dynamic_cast<actions::Msg*>(
             getActionsByName("msg")[0]);
-        trans->m_variableRule.set("msg",
+        (*trans)->m_variableRule.set("msg",
            msg->data(trans), 0);
     }
     if (getActionsByName("logdata").size() > 0) {
         actions::LogData *data = dynamic_cast<actions::LogData*>(
             getActionsByName("logdata")[0]);
-        trans->m_variableRule.set("logdata",
+        (*trans)->m_variableRule.set("logdata",
             data->data(trans), 0);
     }
     if (getActionsByName("severity").size() > 0) {
         actions::Severity *data = dynamic_cast<actions::Severity*>(
             getActionsByName("severity")[0]);
-        trans->m_variableRule.set("severity",
+        (*trans)->m_variableRule.set("severity",
             std::to_string(data->m_severity), 0);
     }
 }

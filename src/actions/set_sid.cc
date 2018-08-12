@@ -40,7 +40,7 @@ bool SetSID::evaluate(Rule *rule, Transaction *t) {
 #endif
 
     t->m_collections.m_session_collection_key = colNameExpanded;
-    t->m_variableSessionID.set(colNameExpanded, t->m_variableOffset);
+    (*t)->m_variableSessionID.set(colNameExpanded, (*t)->m_variableOffset);
 
     return true;
 }

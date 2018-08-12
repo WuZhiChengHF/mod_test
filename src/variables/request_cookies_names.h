@@ -39,7 +39,7 @@ class RequestCookiesNames_DictElement : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableRequestCookiesNames.resolve(m_dictElement, l);
+        (*transaction)->m_variableRequestCookiesNames.resolve(m_dictElement, l);
     }
 
     std::string m_dictElement;
@@ -54,7 +54,7 @@ class RequestCookiesNames_NoDictElement : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableRequestCookiesNames.resolve(l);
+        (*transaction)->m_variableRequestCookiesNames.resolve(l);
     }
 };
 
@@ -68,7 +68,7 @@ class RequestCookiesNames_DictElementRegexp : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableRequestCookiesNames.resolveRegularExpression(
+        (*transaction)->m_variableRequestCookiesNames.resolveRegularExpression(
             &m_r, l);
     }
 

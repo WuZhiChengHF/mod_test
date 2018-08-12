@@ -36,7 +36,7 @@ class RequestMethod : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) {
-        transaction->m_variableRequestMethod.evaluate(l);
+        (*transaction)->m_variableRequestMethod.evaluate(l);
     }
 };
 

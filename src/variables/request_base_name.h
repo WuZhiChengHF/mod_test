@@ -37,7 +37,7 @@ class RequestBasename : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) {
-        transaction->m_variableRequestBasename.evaluate(l);
+        (*transaction)->m_variableRequestBasename.evaluate(l);
     }
 };
 

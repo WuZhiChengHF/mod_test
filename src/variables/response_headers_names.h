@@ -39,7 +39,7 @@ class ResponseHeadersNames_DictElement : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableResponseHeadersNames.resolve(m_dictElement, l);
+        (*transaction)->m_variableResponseHeadersNames.resolve(m_dictElement, l);
     }
 
     std::string m_dictElement;
@@ -53,7 +53,7 @@ class ResponseHeadersNames_NoDictElement : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableResponseHeadersNames.resolve(l);
+        (*transaction)->m_variableResponseHeadersNames.resolve(l);
     }
 };
 
@@ -66,7 +66,7 @@ class ResponseHeadersNames_DictElementRegexp : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableResponseHeadersNames.resolveRegularExpression(
+        (*transaction)->m_variableResponseHeadersNames.resolveRegularExpression(
             &m_r, l);
     }
 

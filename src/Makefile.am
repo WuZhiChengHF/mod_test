@@ -237,6 +237,7 @@ UTILS = \
 	utils/msc_tree.cc \
 	utils/random.cc \
 	utils/regex.cc \
+	utils/ch_regex.cc \
 	utils/sha1.cc \
 	utils/string.cc \
 	utils/system.cc \

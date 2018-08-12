@@ -28,8 +28,7 @@ namespace ctl {
 bool RequestBodyProcessorXML::evaluate(Rule *rule,
     Transaction *transaction) {
     transaction->m_requestBodyProcessor = Transaction::XMLRequestBody;
-    transaction->m_variableReqbodyProcessor.set("XML",
-        transaction->m_variableOffset);
+    (*transaction)->m_variableReqbodyProcessor.set("XML", (*transaction)->m_variableOffset);
 
     return true;
 }

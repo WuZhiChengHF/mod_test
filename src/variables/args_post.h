@@ -38,7 +38,7 @@ class ArgsPost_DictElement : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableArgsPost.resolve(m_dictElement, l);
+        (*transaction)->m_variableArgsPost.resolve(m_dictElement, l);
     }
 
     std::string m_dictElement;
@@ -53,7 +53,7 @@ class ArgsPost_NoDictElement : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableArgsPost.resolve(l);
+        (*transaction)->m_variableArgsPost.resolve(l);
     }
 };
 
@@ -67,7 +67,7 @@ class ArgsPost_DictElementRegexp : public Variable {
     void evaluate(Transaction *transaction,
         Rule *rule,
         std::vector<const VariableValue *> *l) override {
-        transaction->m_variableArgsPost.resolveRegularExpression(&m_r, l);
+        (*transaction)->m_variableArgsPost.resolveRegularExpression(&m_r, l);
     }
 
     Utils::Regex m_r;

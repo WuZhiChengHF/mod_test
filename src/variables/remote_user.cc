@@ -46,7 +46,7 @@ void RemoteUser::evaluate(Transaction *transaction,
 
     std::vector<const VariableValue *> *l2 = \
 	new std::vector<const VariableValue *>();
-    transaction->m_variableRequestHeaders.resolve("authorization", l2);
+    (*transaction)->m_variableRequestHeaders.resolve("authorization", l2);
 
     if (l2->size() < 1) {
         goto clear;
@@ -66,8 +66,7 @@ void RemoteUser::evaluate(Transaction *transaction,
     }
     transaction->m_variableRemoteUser.assign(std::string(base64, 0, pos));
 
-    var = new VariableValue(&l2->at(0)->m_key,
-        &transaction->m_variableRemoteUser);
+    var = new VariableValue(&l2->at(0)->m_key, &transaction->m_variableRemoteUser);
 
     for (auto &i : l2->at(0)->m_orign) {
         std::unique_ptr<VariableOrigin> origin(new VariableOrigin());

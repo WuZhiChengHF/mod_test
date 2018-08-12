@@ -36,10 +36,10 @@ namespace Variables {
 void TimeEpoch::evaluate(Transaction *transaction,
     Rule *rule,
     std::vector<const VariableValue *> *l) {
-    transaction->m_variableTimeEpoch.assign(
+    (*transaction)->m_variableTimeEpoch.assign(
         std::to_string(std::time(nullptr)));
     l->push_back(new VariableValue(&m_retName,
-        &transaction->m_variableTimeEpoch));
+        &(*transaction)->m_variableTimeEpoch));
 }
 
 
