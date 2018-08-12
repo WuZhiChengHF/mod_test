@@ -70,114 +70,120 @@ typedef struct Rules_t Rules;
 
 #ifdef __cplusplus
 
-namespace modsecurity {
+namespace modsecurity
+{
 
 class ModSecurity;
 class Transaction;
 class Rules;
 class RuleMessage;
-namespace actions {
+namespace actions
+{
 class Action;
-namespace disruptive {
+namespace disruptive
+{
 enum AllowType : int;
 }
 }
-namespace RequestBodyProcessor {
+namespace RequestBodyProcessor
+{
 class XML;
 class JSON;
 }
-namespace operators {
+namespace operators
+{
 class Operator;
 }
 
 
-class TransactionAnchoredVariables {
- public:
+class TransactionAnchoredVariables
+{
+public:
     explicit TransactionAnchoredVariables(Transaction *t)
         : m_variableArgsNames(t, "ARGS_NAMES"),
-        m_variableArgsGetNames(t, "ARGS_GET_NAMES"),
-        m_variableArgsPostNames(t, "ARGS_POST_NAMES"),
-        m_variableRequestHeadersNames(t, "REQUEST_HEADERS_NAMES"),
-        m_variableResponseContentType(t, "RESPONSE_CONTENT_TYPE"),
-        m_variableResponseHeadersNames(t, "RESPONSE_HEADERS_NAMES"),
-        m_variableARGScombinedSize(t, "ARGS_COMBINED_SIZE"),
-        m_variableAuthType(t, "AUTH_TYPE"),
-        m_variableFilesCombinedSize(t, "FILES_COMBINED_SIZE"),
-        m_variableFullRequest(t, "FULL_REQUEST"),
-        m_variableFullRequestLength(t, "FULL_REQUEST_LENGTH"),
-        m_variableInboundDataError(t, "INBOUND_DATA_ERROR"),
-        m_variableMatchedVar(t, "MATCHED_VAR"),
-        m_variableMatchedVarName(t, "MATCHED_VAR_NAME"),
-        m_variableMultipartBoundaryQuoted(t, "MULTIPART_BOUNDARY_QUOTED"),
-        m_variableMultipartBoundaryWhiteSpace(t,
-            "MULTIPART_BOUNDARY_WHITESPACE"),
-        m_variableMultipartCrlfLFLines(t, "MULTIPART_CRLF_LF_LINES"),
-        m_variableMultipartDataAfter(t, "MULTIPART_DATA_AFTER"),
-        m_variableMultipartDataBefore(t, "MULTIPART_DATA_BEFORE"),
-        m_variableMultipartFileLimitExceeded(t,
-            "MULTIPART_FILE_LIMIT_EXCEEDED"),
-        m_variableMultipartHeaderFolding(t, "MULTIPART_HEADER_FOLDING"),
-        m_variableMultipartInvalidHeaderFolding(t,
-            "MULTIPART_INVALID_HEADER_FOLDING"),
-        m_variableMultipartInvalidPart(t, "MULTIPART_INVALID_PART"),
-        m_variableMultipartInvalidQuoting(t, "MULTIPART_INVALID_QUOTING"),
-        m_variableMultipartLFLine(t, "MULTIPART_LF_LINE"),
-        m_variableMultipartMissingSemicolon(t, "MULTIPART_MISSING_SEMICOLON"),
-        m_variableMultipartStrictError(t, "MULTIPART_STRICT_ERROR"),
-        m_variableMultipartUnmatchedBoundary(t,
-            "MULTIPART_UNMATCHED_BOUNDARY"),
-        m_variableOutboundDataError(t, "OUTBOUND_DATA_ERROR"),
-        m_variablePathInfo(t, "PATH_INFO"),
-        m_variableQueryString(t, "QUERY_STRING"),
-        m_variableRemoteAddr(t, "REMOTE_ADDR"),
-        m_variableRemoteHost(t, "REMOTE_HOST"),
-        m_variableRemotePort(t, "REMOTE_PORT"),
-        m_variableReqbodyError(t, "REQBODY_ERROR"),
-        m_variableReqbodyErrorMsg(t, "REQBODY_ERROR_MSG"),
-        m_variableReqbodyProcessorError(t, "REQBODY_PROCESSOR_ERROR"),
-        m_variableReqbodyProcessorErrorMsg(t, "REQBODY_PROCESSOR_ERROR_MSG"),
-        m_variableReqbodyProcessor(t, "REQBODY_PROCESSOR"),
-        m_variableRequestBasename(t, "REQUEST_BASENAME"),
-        m_variableRequestBody(t, "REQUEST_BODY"),
-        m_variableRequestBodyLength(t, "REQUEST_BODY_LENGTH"),
-        m_variableRequestFilename(t, "REQUEST_FILENAME"),
-        m_variableRequestLine(t, "REQUEST_LINE"),
-        m_variableRequestMethod(t, "REQUEST_METHOD"),
-        m_variableRequestProtocol(t, "REQUEST_PROTOCOL"),
-        m_variableRequestURI(t, "REQUEST_URI"),
-        m_variableRequestURIRaw(t, "REQUEST_URI_RAW"),
-        m_variableResource(t, "RESOURCE"),
-        m_variableResponseBody(t, "RESPONSE_BODY"),
-        m_variableResponseContentLength(t, "RESPONSE_CONTENT_LENGTH"),
-        m_variableResponseProtocol(t, "RESPONSE_PROTOCOL"),
-        m_variableResponseStatus(t, "RESPONSE_STATUS"),
-        m_variableServerAddr(t, "SERVER_ADDR"),
-        m_variableServerName(t, "SERVER_NAME"),
-        m_variableServerPort(t, "SERVER_PORT"),
-        m_variableSessionID(t, "SESSIONID"),
-        m_variableUniqueID(t, "UNIQUE_ID"),
-        m_variableUrlEncodedError(t, "URLENCODED_ERROR"),
-        m_variableUserID(t, "USERID"),
-        m_variableArgs(t, "ARGS"),
-        m_variableArgsGet(t, "ARGS_GET"),
-        m_variableArgsPost(t, "ARGS_POST"),
-        m_variableFilesSizes(t, "FILES_SIZES"),
-        m_variableFilesNames(t, "FILES_NAMES"),
-        m_variableFilesTmpContent(t, "FILES_TMP_CONTENT"),
-        m_variableMultipartFileName(t, "MULTIPART_FILENAME"),
-        m_variableMultipartName(t, "MULTIPART_NAME"),
-        m_variableMatchedVarsNames(t, "MATCHED_VARS_NAMES"),
-        m_variableMatchedVars(t, "MATCHED_VARS"),
-        m_variableFiles(t, "FILES"),
-        m_variableRequestCookies(t, "REQUEST_COOKIES"),
-        m_variableRequestHeaders(t, "REQUEST_HEADERS"),
-        m_variableResponseHeaders(t, "RESPONSE_HEADERS"),
-        m_variableGeo(t, "GEO"),
-        m_variableRequestCookiesNames(t, "REQUEST_COOKIES_NAMES"),
-        m_variableRule(t, "RULE"),
-        m_variableFilesTmpNames(t, "FILES_TMPNAMES"),
-        m_variableOffset(0)
-        { }
+          m_variableArgsGetNames(t, "ARGS_GET_NAMES"),
+          m_variableArgsPostNames(t, "ARGS_POST_NAMES"),
+          m_variableRequestHeadersNames(t, "REQUEST_HEADERS_NAMES"),
+          m_variableResponseContentType(t, "RESPONSE_CONTENT_TYPE"),
+          m_variableResponseHeadersNames(t, "RESPONSE_HEADERS_NAMES"),
+          m_variableARGScombinedSize(t, "ARGS_COMBINED_SIZE"),
+          m_variableAuthType(t, "AUTH_TYPE"),
+          m_variableFilesCombinedSize(t, "FILES_COMBINED_SIZE"),
+          m_variableFullRequest(t, "FULL_REQUEST"),
+          m_variableFullRequestLength(t, "FULL_REQUEST_LENGTH"),
+          m_variableInboundDataError(t, "INBOUND_DATA_ERROR"),
+          m_variableMatchedVar(t, "MATCHED_VAR"),
+          m_variableMatchedVarName(t, "MATCHED_VAR_NAME"),
+          m_variableMultipartBoundaryQuoted(t, "MULTIPART_BOUNDARY_QUOTED"),
+          m_variableMultipartBoundaryWhiteSpace(t,
+                                                "MULTIPART_BOUNDARY_WHITESPACE"),
+          m_variableMultipartCrlfLFLines(t, "MULTIPART_CRLF_LF_LINES"),
+          m_variableMultipartDataAfter(t, "MULTIPART_DATA_AFTER"),
+          m_variableMultipartDataBefore(t, "MULTIPART_DATA_BEFORE"),
+          m_variableMultipartFileLimitExceeded(t,
+                                               "MULTIPART_FILE_LIMIT_EXCEEDED"),
+          m_variableMultipartHeaderFolding(t, "MULTIPART_HEADER_FOLDING"),
+          m_variableMultipartInvalidHeaderFolding(t,
+                  "MULTIPART_INVALID_HEADER_FOLDING"),
+          m_variableMultipartInvalidPart(t, "MULTIPART_INVALID_PART"),
+          m_variableMultipartInvalidQuoting(t, "MULTIPART_INVALID_QUOTING"),
+          m_variableMultipartLFLine(t, "MULTIPART_LF_LINE"),
+          m_variableMultipartMissingSemicolon(t, "MULTIPART_MISSING_SEMICOLON"),
+          m_variableMultipartStrictError(t, "MULTIPART_STRICT_ERROR"),
+          m_variableMultipartUnmatchedBoundary(t,
+                                               "MULTIPART_UNMATCHED_BOUNDARY"),
+          m_variableOutboundDataError(t, "OUTBOUND_DATA_ERROR"),
+          m_variablePathInfo(t, "PATH_INFO"),
+          m_variableQueryString(t, "QUERY_STRING"),
+          m_variableRemoteAddr(t, "REMOTE_ADDR"),
+          m_variableRemoteHost(t, "REMOTE_HOST"),
+          m_variableRemotePort(t, "REMOTE_PORT"),
+          m_variableReqbodyError(t, "REQBODY_ERROR"),
+          m_variableReqbodyErrorMsg(t, "REQBODY_ERROR_MSG"),
+          m_variableReqbodyProcessorError(t, "REQBODY_PROCESSOR_ERROR"),
+          m_variableReqbodyProcessorErrorMsg(t, "REQBODY_PROCESSOR_ERROR_MSG"),
+          m_variableReqbodyProcessor(t, "REQBODY_PROCESSOR"),
+          m_variableRequestBasename(t, "REQUEST_BASENAME"),
+          m_variableRequestBody(t, "REQUEST_BODY"),
+          m_variableRequestBodyLength(t, "REQUEST_BODY_LENGTH"),
+          m_variableRequestFilename(t, "REQUEST_FILENAME"),
+          m_variableRequestLine(t, "REQUEST_LINE"),
+          m_variableRequestMethod(t, "REQUEST_METHOD"),
+          m_variableRequestProtocol(t, "REQUEST_PROTOCOL"),
+          m_variableRequestURI(t, "REQUEST_URI"),
+          m_variableRequestURIRaw(t, "REQUEST_URI_RAW"),
+          m_variableResource(t, "RESOURCE"),
+          m_variableResponseBody(t, "RESPONSE_BODY"),
+          m_variableResponseContentLength(t, "RESPONSE_CONTENT_LENGTH"),
+          m_variableResponseProtocol(t, "RESPONSE_PROTOCOL"),
+          m_variableResponseStatus(t, "RESPONSE_STATUS"),
+          m_variableServerAddr(t, "SERVER_ADDR"),
+          m_variableServerName(t, "SERVER_NAME"),
+          m_variableServerPort(t, "SERVER_PORT"),
+          m_variableSessionID(t, "SESSIONID"),
+          m_variableUniqueID(t, "UNIQUE_ID"),
+          m_variableUrlEncodedError(t, "URLENCODED_ERROR"),
+          m_variableUserID(t, "USERID"),
+          m_variableArgs(t, "ARGS"),
+          m_variableArgsGet(t, "ARGS_GET"),
+          m_variableArgsPost(t, "ARGS_POST"),
+          m_variableFilesSizes(t, "FILES_SIZES"),
+          m_variableFilesNames(t, "FILES_NAMES"),
+          m_variableFilesTmpContent(t, "FILES_TMP_CONTENT"),
+          m_variableMultipartFileName(t, "MULTIPART_FILENAME"),
+          m_variableMultipartName(t, "MULTIPART_NAME"),
+          m_variableMatchedVarsNames(t, "MATCHED_VARS_NAMES"),
+          m_variableMatchedVars(t, "MATCHED_VARS"),
+          m_variableFiles(t, "FILES"),
+          m_variableRequestCookies(t, "REQUEST_COOKIES"),
+          m_variableRequestHeaders(t, "REQUEST_HEADERS"),
+          m_variableResponseHeaders(t, "RESPONSE_HEADERS"),
+          m_variableGeo(t, "GEO"),
+          m_variableRequestCookiesNames(t, "REQUEST_COOKIES_NAMES"),
+          m_variableRule(t, "RULE"),
+          m_variableFilesTmpNames(t, "FILES_TMPNAMES"),
+          m_variableOffset(0)
+    { }
 
     AnchoredSetVariable m_variableArgsNames;
     AnchoredSetVariable m_variableArgsGetNames;
@@ -264,49 +270,33 @@ class TransactionAnchoredVariables {
 
 
 /** @ingroup ModSecurity_CPP_API */
-class Transaction : public TransactionAnchoredVariables {
- public:
+class Transaction //: public TransactionAnchoredVariables
+{
+public:
     Transaction(ModSecurity *transaction, Rules *rules, void *logCbData);
     ~Transaction();
 
     /** TODO: Should be an structure that fits an IP address */
-    int processConnection(const char *client, int cPort,
-        const char *server, int sPort);
-    int processURI(const char *uri, const char *protocol,
-        const char *http_version);
+    int processConnection(const char *client, int cPort, const char *server, int sPort);
+    int processURI(const char *uri, const char *protocol, const char *http_version);
 
     /**
      * Types of request body that ModSecurity may give a special treatment
      * for the data.
      */
-    enum RequestBodyType {
-      /**
-       *
-       */
-      UnknownFormat,
-      /**
-       *
-       */
-      MultiPartRequestBody,
-      /**
-       *
-       */
-      WWWFormUrlEncoded,
-      /**
-       *
-       */
-      JSONRequestBody,
-      /**
-       *
-       */
-      XMLRequestBody
+    enum RequestBodyType
+    {
+        UnknownFormat,
+        MultiPartRequestBody,
+        WWWFormUrlEncoded,
+        JSONRequestBody,
+        XMLRequestBody
     };
 
     int processRequestHeaders();
     int addRequestHeader(const std::string& key, const std::string& value);
     int addRequestHeader(const unsigned char *key, const unsigned char *value);
-    int addRequestHeader(const unsigned char *key, size_t len_key,
-        const unsigned char *value, size_t len_value);
+    int addRequestHeader(const unsigned char *key, size_t len_key, const unsigned char *value, size_t len_value);
 
     int processRequestBody();
     int appendRequestBody(const unsigned char *body, size_t size);
@@ -315,8 +305,7 @@ class Transaction : public TransactionAnchoredVariables {
     int processResponseHeaders(int code, const std::string& proto);
     int addResponseHeader(const std::string& key, const std::string& value);
     int addResponseHeader(const unsigned char *key, const unsigned char *value);
-    int addResponseHeader(const unsigned char *key, size_t len_key,
-        const unsigned char *value, size_t len_value);
+    int addResponseHeader(const unsigned char *key, size_t len_key, const unsigned char *value, size_t len_value);
 
     int processResponseBody();
     int appendResponseBody(const unsigned char *body, size_t size);
@@ -326,10 +315,8 @@ class Transaction : public TransactionAnchoredVariables {
 
     bool intervention(ModSecurityIntervention *it);
 
-    bool addArgument(const std::string& orig, const std::string& key,
-        const std::string& value, size_t offset);
-    bool extractArguments(const std::string &orig, const std::string& buf,
-        size_t offset);
+    bool addArgument(const std::string& orig, const std::string& key, const std::string& value, size_t offset);
+    bool extractArguments(const std::string &orig, const std::string& buf, size_t offset);
 
     const char *getResponseBody();
     size_t getResponseBodyLength();
@@ -344,8 +331,7 @@ class Transaction : public TransactionAnchoredVariables {
 
     std::string toJSON(int parts);
     std::string toOldAuditLogFormat(int parts, const std::string &trailer);
-    std::string toOldAuditLogFormatIndex(const std::string &filename,
-        double size, const std::string &md5);
+    std::string toOldAuditLogFormatIndex(const std::string &filename, double size, const std::string &md5);
 
     /**
      * Filled during the class instantiation, this variable can be later
@@ -354,8 +340,8 @@ class Transaction : public TransactionAnchoredVariables {
      * m_creationTimeStamp.
      *
      * @note There is space for performance improvement. This value don't
-	 *       need to be filled if there is no rule using the variable
-	 *       `duration'.
+     *       need to be filled if there is no rule using the variable
+     *       `duration'.
      */
     clock_t m_creationTimeStamp;
 
@@ -403,7 +389,7 @@ class Transaction : public TransactionAnchoredVariables {
 
     /**
      * Holds the HTTP return code when it is known. If 0 nothing was
-	 * set.
+     * set.
      */
     int m_httpCodeReturned;
 
@@ -417,6 +403,13 @@ class Transaction : public TransactionAnchoredVariables {
      * to fill the server log whenever is needed.
      */
     ModSecurity *m_ms;
+
+    //将继承改为聚合
+    TransactionAnchoredVariables* m_anv;
+    TransactionAnchoredVariables* operator ->()
+    {
+        return m_anv;
+    }
 
     /**
      * Holds the type of the request body, in case there is one.
@@ -433,29 +426,14 @@ class Transaction : public TransactionAnchoredVariables {
      */
     Rules *m_rules;
 
-    /**
-     *
-     */
     std::list<int > m_ruleRemoveById;
 
-    /**
-     *
-     */
     std::list<std::string> m_ruleRemoveByTag;
 
-    /**
-     *
-     */
     std::list< std::pair<std::string, std::string> > m_ruleRemoveTargetByTag;
 
-    /**
-     *
-     */
     std::list< std::pair<int, std::string> > m_ruleRemoveTargetById;
 
-    /**
-     *
-     */
     int m_requestBodyAccess;
 
     /**
@@ -485,7 +463,7 @@ class Transaction : public TransactionAnchoredVariables {
 
     /**
      * Contains the unique ID of the transaction. Use by the variable
-	 * `UNIQUE_ID'. This unique id is also saved as part of the AuditLog.
+     * `UNIQUE_ID'. This unique id is also saved as part of the AuditLog.
      */
     std::string m_id;
 
@@ -558,7 +536,7 @@ class Transaction : public TransactionAnchoredVariables {
     std::string m_variableTimeWDay;
     std::string m_variableTimeYear;
 
- private:
+private:
     /**
      * Pointer to the callback function that will be called to fill
      * the web server (connector) log.
@@ -575,57 +553,57 @@ extern "C" {
 
 /** @ingroup ModSecurity_C_API */
 Transaction *msc_new_transaction(ModSecurity *ms,
-    Rules *rules, void *logCbData);
+                                 Rules *rules, void *logCbData);
 
 /** @ingroup ModSecurity_C_API */
 int msc_process_connection(Transaction *transaction,
-    const char *client, int cPort, const char *server, int sPort);
+                           const char *client, int cPort, const char *server, int sPort);
 
 /** @ingroup ModSecurity_C_API */
 int msc_process_request_headers(Transaction *transaction);
 
 /** @ingroup ModSecurity_C_API */
 int msc_add_request_header(Transaction *transaction, const unsigned char *key,
-    const unsigned char *value);
+                           const unsigned char *value);
 
 /** @ingroup ModSecurity_C_API */
 int msc_add_n_request_header(Transaction *transaction,
-    const unsigned char *key, size_t len_key, const unsigned char *value,
-    size_t len_value);
+                             const unsigned char *key, size_t len_key, const unsigned char *value,
+                             size_t len_value);
 
 /** @ingroup ModSecurity_C_API */
 int msc_process_request_body(Transaction *transaction);
 
 /** @ingroup ModSecurity_C_API */
 int msc_append_request_body(Transaction *transaction,
-    const unsigned char *body, size_t size);
+                            const unsigned char *body, size_t size);
 
 /** @ingroup ModSecurity_C_API */
 int msc_request_body_from_file(Transaction *transaction, const char *path);
 
 /** @ingroup ModSecurity_C_API */
 int msc_process_response_headers(Transaction *transaction, int code,
-    const char* protocol);
+                                 const char* protocol);
 
 /** @ingroup ModSecurity_C_API */
 int msc_add_response_header(Transaction *transaction,
-    const unsigned char *key, const unsigned char *value);
+                            const unsigned char *key, const unsigned char *value);
 
 /** @ingroup ModSecurity_C_API */
 int msc_add_n_response_header(Transaction *transaction,
-    const unsigned char *key, size_t len_key, const unsigned char *value,
-    size_t len_value);
+                              const unsigned char *key, size_t len_key, const unsigned char *value,
+                              size_t len_value);
 
 /** @ingroup ModSecurity_C_API */
 int msc_process_response_body(Transaction *transaction);
 
 /** @ingroup ModSecurity_C_API */
 int msc_append_response_body(Transaction *transaction,
-    const unsigned char *body, size_t size);
+                             const unsigned char *body, size_t size);
 
 /** @ingroup ModSecurity_C_API */
 int msc_process_uri(Transaction *transaction, const char *uri,
-    const char *protocol, const char *http_version);
+                    const char *protocol, const char *http_version);
 
 /** @ingroup ModSecurity_C_API */
 const char *msc_get_response_body(Transaction *transaction);
