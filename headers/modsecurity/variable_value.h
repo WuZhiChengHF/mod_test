@@ -40,6 +40,51 @@ void delete[](void* p);
 
 namespace modsecurity {
 
+#include<list>
+using std::list;
+template<typename T>
+class CacheList
+{
+    protected:
+        list<T*> clist;
+    public:
+        CacheList(){}
+        ~CacheList()
+        {
+            while (!clist.empty())
+            {
+                T* p = clist.front();
+                delete p;
+                clist.pop_front();
+            }
+        }
+
+        T* pop_one(const T* o)
+        {
+            if (clist.size() == 0)
+            {
+                return (T*) new T(o); 
+            }
+            T* p = clist.front();
+            p->init(o);
+            clist.pop_front();
+            return p;
+        }
+
+        T* pop_one(void);
+
+        T* push_one(T* t)
+        {
+            t->clear();
+           clist.push_back(t);
+        }
+
+        int get_conut()
+        {
+            return clist.size(); 
+        }
+};
+
 class Collection;
 class VariableValue {
  public:

@@ -53,6 +53,20 @@ void operator delete[](void* p) noexcept(true)
 
 namespace modsecurity {
 
+template<>
+VariableOrigin* CacheList::pop_one(void)
+{
+    if (clist.size() == 0)
+    {
+        return new VariableOrigin();
+    }
+
+    VariableOrigin* p = clist.front();
+    p->init(o);
+    clist.pop_front();
+
+    return p;
+}
 
 AnchoredVariable::AnchoredVariable(Transaction *t,
     std::string name)
