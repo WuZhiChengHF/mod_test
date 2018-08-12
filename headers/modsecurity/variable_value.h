@@ -35,8 +35,8 @@ typedef struct Variable_t VariableValue;
 
 void* operator new(size_t size);
 void* operator new[](size_t size);
-void delete(void* p);
-void delete[](void* p);
+void  operator delete(void* p);
+void  operator delete[](void* p);
 
 namespace modsecurity {
 
