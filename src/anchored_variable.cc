@@ -67,6 +67,10 @@ VariableOrigin* CacheList<VariableOrigin>::pop_one(void)
     return p;
 }
 
+//静态变量的定义
+CacheList<VariableValue> VariableValue::clist_value;
+CacheList<VariableOrigin> VariableValue::clist_value_orig;
+
 AnchoredVariable::AnchoredVariable(Transaction *t,
     std::string name)
     : m_transaction(t),
