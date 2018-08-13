@@ -72,9 +72,25 @@ public:
         return p;
     }
 
-    T* pop_one(void);
+    VariableOrigin* pop_one(void)
+    {
+        if (clist.size() == 0)
+        {
+            return new VariableOrigin();
+        }
 
-    T* push_one(T* t)
+        VariableOrigin* p = clist.front();
+        clist.pop_front();
+
+        return p;
+    }
+
+    //void push_one(VariableOrigin* t)
+    //{
+    //    clist.push_back(t);
+    //}
+
+    void push_one(T* t)
     {
         t->clear();
         clist.push_back(t);
@@ -85,6 +101,26 @@ public:
         return clist.size();
     }
 };
+
+//template <>
+//VariableOrigin* CacheList<VariableOrigin>::pop_one()
+//{
+//    if (clist.size() == 0)
+//    {
+//        return new VariableOrigin();
+//    }
+//
+//    VariableOrigin* p = clist.front();
+//    clist.pop_front();
+//
+//    return p;
+//}
+
+template <>
+void CacheList<VariableOrigin>::push_one(VariableOrigin* t)
+{
+    clist.push_back(t);
+}
 
 class Collection;
 class VariableValue

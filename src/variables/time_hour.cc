@@ -46,10 +46,10 @@ void TimeHour::evaluate(Transaction *transaction,
     localtime_r(&timer, &timeinfo);
     strftime(tstr, 200, "%H", &timeinfo);
 
-    (*transaction)->m_variableTimeHour.assign(tstr);
+    transaction->m_variableTimeHour.assign(tstr);
 
     l->push_back(new VariableValue(&m_retName,
-        &(*transaction)->m_variableTimeHour));
+        &transaction->m_variableTimeHour));
 }
 
 

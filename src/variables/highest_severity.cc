@@ -29,10 +29,10 @@ namespace Variables {
 void HighestSeverity::evaluate(Transaction *transaction,
     Rule *rule,
     std::vector<const VariableValue *> *l) {
-    (*transaction)->m_variableHighestSeverityAction.assign(
+    transaction->m_variableHighestSeverityAction.assign(
         std::to_string(transaction->m_highestSeverityAction));
     l->push_back(new VariableValue(m_fullName,
-       &(*transaction)->m_variableHighestSeverityAction));
+       &transaction->m_variableHighestSeverityAction));
 }
 
 

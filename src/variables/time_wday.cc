@@ -46,10 +46,10 @@ void TimeWDay::evaluate(Transaction *transaction,
     localtime_r(&timer, &timeinfo);
     strftime(tstr, 200, "%u", &timeinfo);
 
-    (*transaction)->m_variableTimeWDay.assign(tstr);
+    transaction->m_variableTimeWDay.assign(tstr);
 
     l->push_back(new VariableValue(&m_retName,
-        &(*transaction)->m_variableTimeWDay));
+        &transaction->m_variableTimeWDay));
 }
 
 

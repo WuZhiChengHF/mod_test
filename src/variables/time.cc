@@ -47,9 +47,9 @@ void Time::evaluate(Transaction *transaction,
     localtime_r(&timer, &timeinfo);
     strftime(tstr, 200, "%H:%M:%S", &timeinfo);
 
-    (*transaction)->m_variableTime.assign(tstr);
+    transaction->m_variableTime.assign(tstr);
     l->push_back(new VariableValue(&m_retName,
-        &(*transaction)->m_variableTime));
+        &transaction->m_variableTime));
 }
 
 

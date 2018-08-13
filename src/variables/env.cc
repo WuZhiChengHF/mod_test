@@ -44,10 +44,10 @@ void Env::evaluate(Transaction *transaction,
         std::string key = std::string(env, 0, pos);
         std::string value = std::string(env, pos+1, env.length() - (pos + 1));
         std::pair<std::string, std::string> a(key, value);
-        (*transaction)->m_variableEnvs.insert(a);
+        transaction->m_variableEnvs.insert(a);
     }
 
-    for (auto& x : (*transaction)->m_variableEnvs) {
+    for (auto& x : transaction->m_variableEnvs) {
         if (x.first != m_name && m_name.length() > 0) {
             continue;
         }

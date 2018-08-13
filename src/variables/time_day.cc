@@ -46,10 +46,10 @@ void TimeDay::evaluate(Transaction *transaction,
     localtime_r(&timer, &timeinfo);
     strftime(tstr, 200, "%d", &timeinfo);
 
-    (*transaction)->m_variableTimeDay.assign(tstr);
+    transaction->m_variableTimeDay.assign(tstr);
 
     l->push_back(new VariableValue(&m_retName,
-        &(*transaction)->m_variableTimeDay));
+        &transaction->m_variableTimeDay));
 }
 
 

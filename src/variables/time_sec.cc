@@ -46,10 +46,10 @@ void TimeSec::evaluate(Transaction *transaction,
     localtime_r(&timer, &timeinfo);
     strftime(tstr, 200, "%S", &timeinfo);
 
-    (*transaction)->m_variableTimeSec.assign(tstr);
+    transaction->m_variableTimeSec.assign(tstr);
 
     l->push_back(new VariableValue(&m_retName,
-        &(*transaction)->m_variableTimeSec));
+        &transaction->m_variableTimeSec));
 }
 
 
