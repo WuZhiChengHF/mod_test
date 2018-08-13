@@ -122,7 +122,7 @@ public:
     {
         m_key.assign(*key);
         m_keyWithCollection = std::make_shared<std::string>(*key);
-        m_from_pool = false;
+        m_from_pool = true;
     }
 
     VariableValue(const std::string *key, const std::string *value) :
@@ -211,6 +211,7 @@ public:
     
     inline void clear()
     {
+        m_keyWithCollection.reset();
         for (auto &i: this->m_orign)
         {
             clist_value_orig.push_one(i.release());
