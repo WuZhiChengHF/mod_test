@@ -60,28 +60,31 @@ public:
         }
     }
 
-    T* pop_one(const T* o)
+    // 不带初始化参数的pop_one
+    T* pop_one(void)
     {
         if (clist.size() == 0)
         {
-            return (T*) new T(o);
+            return new T();
         }
+
         T* p = clist.front();
-        p->init(o);
         clist.pop_front();
+
         return p;
     }
 
-    VariableOrigin* pop_one(void)
+    // 带初始化参数的pop_one
+    template<typename V>
+    T* pop_one(const V v)
     {
         if (clist.size() == 0)
         {
-            return new VariableOrigin();
+            return new T(v);
         }
-
-        VariableOrigin* p = clist.front();
+        T* p = clist.front();
+        p->init(v);
         clist.pop_front();
-
         return p;
     }
 
@@ -97,6 +100,7 @@ public:
     }
 };
 
+// 特化VariableOrigin的push_one函数
 template <>
 void CacheList<VariableOrigin>::push_one(VariableOrigin* t);
 
@@ -107,6 +111,14 @@ public:
     explicit VariableValue(const std::string *key) :
         m_key(""),
         m_value("")
+    {
+        m_key.assign(*key);
+        m_keyWithCollection = std::make_shared<std::string>(*key);
+        m_from_pool = false;
+    }
+
+    // 添加字符串参数的初始化函数
+    void init(const std::string *key)
     {
         m_key.assign(*key);
         m_keyWithCollection = std::make_shared<std::string>(*key);

@@ -36,33 +36,37 @@
 #ifdef __cplusplus
 
 
-namespace modsecurity {
+namespace modsecurity
+{
 class Transaction;
 
 
-class AnchoredVariable {
- public:
+class AnchoredVariable
+{
+public:
     AnchoredVariable(Transaction* t, std::string name);
     ~AnchoredVariable();
 
     void unset();
     void set(const std::string &a, size_t offset);
     void set(const std::string &a, size_t offset, size_t offsetLen);
-    void append(const std::string &a, size_t offset,
-        bool spaceSeparator = false);
-    void append(const std::string &a, size_t offset,
-        bool spaceSeparator, int size);
+    void append(const std::string &a, size_t offset, bool spaceSeparator = false);
+    void append(const std::string &a, size_t offset, bool spaceSeparator, int size);
 
     void evaluate(std::vector<const VariableValue *> *l);
-    std::string *  evaluate();
+    std::string*  evaluate();
     std::unique_ptr<std::string> resolveFirst();
 
+    // 添加init和clear函数
+    void init(Transaction* t);
+    void clear();
+    
     Transaction *m_transaction;
     int m_offset;
     std::string m_name;
     std::string m_value;
 
- private:
+private:
     VariableValue *m_var;
 };
 

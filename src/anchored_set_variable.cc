@@ -24,23 +24,28 @@
 #include "modsecurity/transaction.h"
 #include "src/utils/regex.h"
 
-namespace modsecurity {
+namespace modsecurity
+{
 
 
 AnchoredSetVariable::AnchoredSetVariable(Transaction *t, std::string name)
     : m_transaction(t),
-    m_name(name) {
-        reserve(10);
-    }
+      m_name(name)
+{
+    reserve(10);
+}
 
 
-AnchoredSetVariable::~AnchoredSetVariable() {
+AnchoredSetVariable::~AnchoredSetVariable()
+{
     unset();
 }
 
 
-void AnchoredSetVariable::unset() {
-    for (const auto& x : *this) {
+void AnchoredSetVariable::unset()
+{
+    for (const auto& x : *this)
+    {
         VariableValue *var = x.second;
         delete var;
     }
@@ -49,7 +54,8 @@ void AnchoredSetVariable::unset() {
 
 
 void AnchoredSetVariable::set(const std::string &key,
-    const std::string &value, size_t offset, size_t len) {
+                              const std::string &value, size_t offset, size_t len)
+{
     std::unique_ptr<VariableOrigin> origin(new VariableOrigin());
     std::string *v = new std::string(value);
     VariableValue *var = new VariableValue(std::make_shared<std::string>(m_name + ":" + key), v);
@@ -64,7 +70,8 @@ void AnchoredSetVariable::set(const std::string &key,
 
 
 void AnchoredSetVariable::set(const std::string &key,
-    const std::string &value, size_t offset) {
+                              const std::string &value, size_t offset)
+{
     std::unique_ptr<VariableOrigin> origin(new VariableOrigin());
     std::string *v = new std::string(value);
     VariableValue *var = new VariableValue(std::make_shared<std::string>(m_name + ":" + key), v);
@@ -79,26 +86,32 @@ void AnchoredSetVariable::set(const std::string &key,
 
 
 void AnchoredSetVariable::resolve(
-    std::vector<const VariableValue *> *l) {
-    for (const auto& x : *this) {
+    std::vector<const VariableValue *> *l)
+{
+    for (const auto& x : *this)
+    {
         l->insert(l->begin(), new VariableValue(x.second));
     }
 }
 
 
 void AnchoredSetVariable::resolve(const std::string &key,
-    std::vector<const VariableValue *> *l) {
+                                  std::vector<const VariableValue *> *l)
+{
     auto range = this->equal_range(key);
-    for (auto it = range.first; it != range.second; ++it) {
+    for (auto it = range.first; it != range.second; ++it)
+    {
         l->push_back(new VariableValue(it->second));
     }
 }
 
 
 std::unique_ptr<std::string> AnchoredSetVariable::resolveFirst(
-    const std::string &key) {
+    const std::string &key)
+{
     auto range = equal_range(key);
-    for (auto it = range.first; it != range.second; ++it) {
+    for (auto it = range.first; it != range.second; ++it)
+    {
         std::unique_ptr<std::string> b(new std::string());
         b->assign(it->second->m_value);
         return b;
@@ -108,10 +121,13 @@ std::unique_ptr<std::string> AnchoredSetVariable::resolveFirst(
 
 
 void AnchoredSetVariable::resolveRegularExpression(Utils::Regex *r,
-    std::vector<const VariableValue *> *l) {
-    for (const auto& x : *this) {
+        std::vector<const VariableValue *> *l)
+{
+    for (const auto& x : *this)
+    {
         int ret = Utils::regex_search(x.first, *r);
-        if (ret <= 0) {
+        if (ret <= 0)
+        {
             continue;
         }
         l->insert(l->begin(), new VariableValue(x.second));

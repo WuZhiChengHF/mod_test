@@ -50,14 +50,14 @@ struct MyEqual
 {
     bool operator()(const std::string& Left, const std::string& Right) const
     {
-       const unsigned char* pLeft = (const unsigned char*) Left.c_str(); 
-       const unsigned char* pRight = (const unsigned char*) Right.c_str(); 
-       int nLSize = Left.size();
-       int nRSize = Right.size();
-       if (nLSize != nRSize) return false; 
-       if (memcmp(pLeft, pRight, nLSize)) return false;
+        const unsigned char* pLeft = (const unsigned char*) Left.c_str();
+        const unsigned char* pRight = (const unsigned char*) Right.c_str();
+        int nLSize = Left.size();
+        int nRSize = Right.size();
+        if (nLSize != nRSize) return false;
+        if (memcmp(pLeft, pRight, nLSize)) return false;
 
-       return true;
+        return true;
     }
 };
 
@@ -65,7 +65,7 @@ struct MyHash
 {
     size_t operator()(const std::string& Keyval) const
     {
-        unsigned int uRet = 0; 
+        unsigned int uRet = 0;
         const unsigned char* pKeyCurrent = (const unsigned char*)Keyval.c_str();
         unsigned int uTmp = 0;
 
@@ -92,21 +92,17 @@ public:
 
     void unset();
 
-    void set(const std::string &key, const std::string &value,
-             size_t offset);
+    void set(const std::string &key, const std::string &value, size_t offset);
 
-    void set(const std::string &key, const std::string &value,
-             size_t offset, size_t len);
+    void set(const std::string &key, const std::string &value, size_t offset, size_t len);
 
     void setCopy(std::string key, std::string value, size_t offset);
 
     void resolve(std::vector<const VariableValue *> *l);
 
-    void resolve(const std::string &key,
-                 std::vector<const VariableValue *> *l);
+    void resolve(const std::string &key, std::vector<const VariableValue *> *l);
 
-    void resolveRegularExpression(Utils::Regex *r,
-                                  std::vector<const VariableValue *> *l);
+    void resolveRegularExpression(Utils::Regex *r, std::vector<const VariableValue *> *l);
 
     std::unique_ptr<std::string> resolveFirst(const std::string &key);
 

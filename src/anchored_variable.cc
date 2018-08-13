@@ -51,7 +51,8 @@ void operator delete[](void* p) noexcept(true)
 
 #endif //__cpluscplus
 
-namespace modsecurity {
+namespace modsecurity
+{
 
 template <>
 void CacheList<VariableOrigin>::push_one(VariableOrigin* t)
@@ -63,33 +64,48 @@ void CacheList<VariableOrigin>::push_one(VariableOrigin* t)
 CacheList<VariableValue> VariableValue::clist_value;
 CacheList<VariableOrigin> VariableValue::clist_value_orig;
 
-AnchoredVariable::AnchoredVariable(Transaction *t,
-    std::string name)
+AnchoredVariable::AnchoredVariable(Transaction *t, std::string name)
     : m_transaction(t),
-    m_var(NULL),
-    m_offset(0),
-    m_name(""),
-    m_value("") {
-        m_name.append(name);
-        m_var = new VariableValue(&m_name);
+      m_var(NULL),
+      m_offset(0),
+      m_name(""),
+      m_value("")
+{
+    m_name.append(name);
+    m_var = new VariableValue(&m_name);
 }
 
+void AnchoredVariable::init(Transaction* t)
+{
+    m_transaction = t;
+    //m_var = new VariableValue(&m_name);
+}
 
-AnchoredVariable::~AnchoredVariable() {
-    if (m_var) {
+void AnchoredVariable::clear()
+{
+    m_offset = 0;
+    m_value.append("");
+    //m_var = new VariableValue(&m_name);
+}
+
+AnchoredVariable::~AnchoredVariable()
+{
+    if (m_var)
+    {
         delete (m_var);
         m_var = NULL;
     }
 }
 
 
-void AnchoredVariable::unset() {
+void AnchoredVariable::unset()
+{
     m_value.clear();
 }
 
 
-void AnchoredVariable::set(const std::string &a, size_t offset,
-    size_t offsetLen) {
+void AnchoredVariable::set(const std::string &a, size_t offset, size_t offsetLen)
+{
     std::unique_ptr<VariableOrigin> origin(new VariableOrigin());
 
     m_offset = offset;
@@ -100,7 +116,8 @@ void AnchoredVariable::set(const std::string &a, size_t offset,
 }
 
 
-void AnchoredVariable::set(const std::string &a, size_t offset) {
+void AnchoredVariable::set(const std::string &a, size_t offset)
+{
     std::unique_ptr<VariableOrigin> origin(new VariableOrigin());
 
     m_offset = offset;
@@ -111,14 +128,17 @@ void AnchoredVariable::set(const std::string &a, size_t offset) {
 }
 
 
-void AnchoredVariable::append(const std::string &a, size_t offset,
-    bool spaceSeparator) {
+void AnchoredVariable::append(const std::string &a, size_t offset, bool spaceSeparator)
+{
     std::unique_ptr<VariableOrigin> origin(
         new VariableOrigin());
 
-    if (spaceSeparator && !m_value.empty()) {
+    if (spaceSeparator && !m_value.empty())
+    {
         m_value.append(" " + a);
-    } else {
+    }
+    else
+    {
         m_value.append(a);
     }
     m_offset = offset;
@@ -128,14 +148,17 @@ void AnchoredVariable::append(const std::string &a, size_t offset,
 }
 
 
-void AnchoredVariable::append(const std::string &a, size_t offset,
-    bool spaceSeparator, int size) {
+void AnchoredVariable::append(const std::string &a, size_t offset, bool spaceSeparator, int size)
+{
     std::unique_ptr<VariableOrigin> origin(
         new VariableOrigin());
 
-    if (spaceSeparator && !m_value.empty()) {
+    if (spaceSeparator && !m_value.empty())
+    {
         m_value.append(" " + a);
-    } else {
+    }
+    else
+    {
         m_value.append(a);
     }
     m_offset = offset;
@@ -145,8 +168,10 @@ void AnchoredVariable::append(const std::string &a, size_t offset,
 }
 
 
-void AnchoredVariable::evaluate(std::vector<const VariableValue *> *l) {
-    if (m_name.empty() || m_value.empty()) {
+void AnchoredVariable::evaluate(std::vector<const VariableValue *> *l)
+{
+    if (m_name.empty() || m_value.empty())
+    {
         return;
     }
 
@@ -156,16 +181,20 @@ void AnchoredVariable::evaluate(std::vector<const VariableValue *> *l) {
 }
 
 
-std::string * AnchoredVariable::evaluate() {
-    if (m_value.empty() == true) {
+std::string * AnchoredVariable::evaluate()
+{
+    if (m_value.empty() == true)
+    {
         return NULL;
     }
     return &m_value;
 }
 
 
-std::unique_ptr<std::string> AnchoredVariable::resolveFirst() {
-    if (m_value.empty()) {
+std::unique_ptr<std::string> AnchoredVariable::resolveFirst()
+{
+    if (m_value.empty())
+    {
         return nullptr;
     }
     std::unique_ptr<std::string> a(new std::string());
