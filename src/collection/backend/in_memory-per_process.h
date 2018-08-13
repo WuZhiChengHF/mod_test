@@ -32,9 +32,12 @@
 #define SRC_COLLECTION_BACKEND_IN_MEMORY_PER_PROCESS_H_
 
 #ifdef __cplusplus
-namespace modsecurity {
-namespace collection {
-namespace backend {
+namespace modsecurity
+{
+namespace collection
+{
+namespace backend
+{
 
 /*
  * FIXME:
@@ -44,55 +47,91 @@ namespace backend {
  *
  * We have to have a better hash function, maybe based on the std::hash.
  *
+ *struct MyEqual {
+ *    bool operator()(const std::string& Left, const std::string& Right) const {
+ *        return Left.size() == Right.size()
+ *             && std::equal(Left.begin(), Left.end(), Right.begin(),
+ *            [](char a, char b) {
+ *            return tolower(a) == tolower(b);
+ *        });
+ *    }
+ *};
+ *
+ *struct MyHash{
+ *    size_t operator()(const std::string& Keyval) const {
+ *        // You might need a better hash function than this
+ *        size_t h = 0;
+ *        std::for_each(Keyval.begin(), Keyval.end(), [&](char c) {
+ *            h += tolower(c);
+ *        });
+ *        return h;
+ *    }
+ *};
  */
-struct MyEqual {
-    bool operator()(const std::string& Left, const std::string& Right) const {
-        return Left.size() == Right.size()
-             && std::equal(Left.begin(), Left.end(), Right.begin(),
-            [](char a, char b) {
-            return tolower(a) == tolower(b);
-        });
+
+struct MyEqual
+{
+    bool operator()(const std::string& Left, const std::string& Right) const
+    {
+        const unsigned char* pLeft = (const unsigned char*) Left.c_str();
+        const unsigned char* pRight = (const unsigned char*) Right.c_str();
+        int nLSize = Left.size();
+        int nRSize = Right.size();
+        if (nLSize != nRight) return false;
+        if (memcmp(pLeft, pRight, nLSize)) return false;
+
+        return true;
     }
 };
 
-struct MyHash{
-    size_t operator()(const std::string& Keyval) const {
-        // You might need a better hash function than this
-        size_t h = 0;
-        std::for_each(Keyval.begin(), Keyval.end(), [&](char c) {
-            h += tolower(c);
-        });
-        return h;
+struct MyHash
+{
+    size_t operator()(const std::string& Keyval) const
+    {
+        unsigned int uRet = 0;
+        const unsigned char* pKeyCurrent = (const unsigned char*)Keyval.c_str();
+        unsigned int uTmp = 0;
+
+        int nSize = Keyval.size();
+
+        for (int i=0; i<nSize; i++)
+        {
+            uTmp = pKeyCurrent[i];
+            uTmp <<= ((i%sizeof(int))*8);
+            uRet ^= uTmp;
+        }
+
+        return uRet;
     }
 };
 
 class InMemoryPerProcess :
-    public std::unordered_multimap<std::string, std::string,
-        /*std::hash<std::string>*/MyHash, MyEqual>,
-    public Collection {
- public:
+    public std::unordered_multimap<std::string, std::string, MyHash, MyEqual>,
+    public Collection
+{
+public:
     InMemoryPerProcess(std::string name);
     ~InMemoryPerProcess();
     void store(std::string key, std::string value) override;
 
     bool storeOrUpdateFirst(const std::string &key,
-        const std::string &value) override;
+                            const std::string &value) override;
 
     bool updateFirst(const std::string &key,
-        const std::string &value) override;
+                     const std::string &value) override;
 
     void del(const std::string& key) override;
 
     std::unique_ptr<std::string> resolveFirst(const std::string& var) override;
 
     void resolveSingleMatch(const std::string& var,
-        std::vector<const VariableValue *> *l) override;
+                            std::vector<const VariableValue *> *l) override;
     void resolveMultiMatches(const std::string& var,
-        std::vector<const VariableValue *> *l) override;
+                             std::vector<const VariableValue *> *l) override;
     void resolveRegularExpression(const std::string& var,
-        std::vector<const VariableValue *> *l) override;
+                                  std::vector<const VariableValue *> *l) override;
 
- private:
+private:
     pthread_mutex_t m_lock;
 };
 

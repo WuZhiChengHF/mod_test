@@ -22,6 +22,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <cstring>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -36,58 +37,76 @@
 
 #ifdef __cplusplus
 
-namespace modsecurity {
+namespace modsecurity
+{
 class Transaction;
-namespace Utils {
+namespace Utils
+{
 class Regex;
 }
 
 
-struct MyEqual {
-    bool operator()(const std::string& Left, const std::string& Right) const {
-        return Left.size() == Right.size()
-             && std::equal(Left.begin(), Left.end(), Right.begin(),
-            [](char a, char b) {
-            return tolower(a) == tolower(b);
-        });
+struct MyEqual
+{
+    bool operator()(const std::string& Left, const std::string& Right) const
+    {
+       const unsigned char* pLeft = (const unsigned char*) Left.c_str(); 
+       const unsigned char* pRight = (const unsigned char*) Right.c_str(); 
+       int nLSize = Left.size();
+       int nRSize = Right.size();
+       if (nLSize != nRight) return false; 
+       if (memcmp(pLeft, pRight, nLSize)) return false;
+
+       return true;
     }
 };
 
-struct MyHash{
-    size_t operator()(const std::string& Keyval) const {
-        // You might need a better hash function than this
-        size_t h = 0;
-        std::for_each(Keyval.begin(), Keyval.end(), [&](char c) {
-            h += tolower(c);
-        });
-        return h;
+struct MyHash
+{
+    size_t operator()(const std::string& Keyval) const
+    {
+        unsigned int uRet = 0; 
+        const unsigned char* pKeyCurrent = (const unsigned char*)Keyval.c_str();
+        unsigned int uTmp = 0;
+
+        int nSize = Keyval.size();
+
+        for (int i=0; i<nSize; i++)
+        {
+            uTmp = pKeyCurrent[i];
+            uTmp <<= ((i%sizeof(int))*8);
+            uRet ^= uTmp;
+        }
+
+        return uRet;
     }
 };
 
 
 class AnchoredSetVariable : public std::unordered_multimap<std::string,
-	VariableValue *, MyHash, MyEqual> {
- public:
+    VariableValue *, MyHash, MyEqual>
+{
+public:
     AnchoredSetVariable(Transaction *t, std::string name);
     ~AnchoredSetVariable();
 
     void unset();
 
     void set(const std::string &key, const std::string &value,
-        size_t offset);
+             size_t offset);
 
     void set(const std::string &key, const std::string &value,
-        size_t offset, size_t len);
+             size_t offset, size_t len);
 
     void setCopy(std::string key, std::string value, size_t offset);
 
     void resolve(std::vector<const VariableValue *> *l);
 
     void resolve(const std::string &key,
-        std::vector<const VariableValue *> *l);
+                 std::vector<const VariableValue *> *l);
 
     void resolveRegularExpression(Utils::Regex *r,
-        std::vector<const VariableValue *> *l);
+                                  std::vector<const VariableValue *> *l);
 
     std::unique_ptr<std::string> resolveFirst(const std::string &key);
 

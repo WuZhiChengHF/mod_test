@@ -24,51 +24,69 @@
 
 #include "modsecurity/transaction.h"
 
-namespace modsecurity {
-namespace RequestBodyProcessor {
+namespace modsecurity
+{
+namespace RequestBodyProcessor
+{
 
 #define MULTIPART_BUF_SIZE 4096
 #define MULTIPART_FORMDATA 1
 #define MULTIPART_FILE 2
 
+struct MyEqual
+{
+    bool operator()(const std::string& Left, const std::string& Right) const
+    {
+        const unsigned char* pLeft = (const unsigned char*) Left.c_str();
+        const unsigned char* pRight = (const unsigned char*) Right.c_str();
+        int nLSize = Left.size();
+        int nRSize = Right.size();
+        if (nLSize != nRight) return false;
+        if (memcmp(pLeft, pRight, nLSize)) return false;
 
-struct MyHash {
-    size_t operator()(const std::string& Keyval) const {
-        size_t h = 0;
-        std::for_each(Keyval.begin(), Keyval.end(), [&](char c) {
-            h += tolower(c);
-        });
-        return h;
+        return true;
     }
 };
 
+struct MyHash
+{
+    size_t operator()(const std::string& Keyval) const
+    {
+        unsigned int uRet = 0;
+        const unsigned char* pKeyCurrent = (const unsigned char*)Keyval.c_str();
+        unsigned int uTmp = 0;
 
-struct MyEqual {
-    bool operator()(const std::string& Left, const std::string& Right) const {
-        return Left.size() == Right.size()
-             && std::equal(Left.begin(), Left.end(), Right.begin(),
-            [](char a, char b) {
-                return tolower(a) == tolower(b);
-            });
+        int nSize = Keyval.size();
+
+        for (int i=0; i<nSize; i++)
+        {
+            uTmp = pKeyCurrent[i];
+            uTmp <<= ((i%sizeof(int))*8);
+            uRet ^= uTmp;
+        }
+
+        return uRet;
     }
 };
 
-
-class MultipartPart {
- public:
+class MultipartPart
+{
+public:
     MultipartPart()
-     : m_type(MULTIPART_FORMDATA),
-     m_tmp_file_fd(0),
-     m_offset(0),
-     m_filenameOffset(0),
-     m_nameOffset(0),
-     m_valueOffset(0),
-     m_length(0) {
-         m_tmp_file_size.first = 0;
-         m_tmp_file_size.second = 0;
+        : m_type(MULTIPART_FORMDATA),
+          m_tmp_file_fd(0),
+          m_offset(0),
+          m_filenameOffset(0),
+          m_nameOffset(0),
+          m_valueOffset(0),
+          m_length(0)
+    {
+        m_tmp_file_size.first = 0;
+        m_tmp_file_size.second = 0;
     }
 
-    ~MultipartPart() {
+    ~MultipartPart()
+    {
         m_headers.clear();
         m_value_parts.clear();
     }
@@ -107,8 +125,9 @@ class MultipartPart {
 };
 
 
-class Multipart {
- public:
+class Multipart
+{
+public:
     Multipart(std::string header, Transaction *transaction);
     ~Multipart();
 
@@ -190,12 +209,13 @@ class Multipart {
     int m_flag_file_limit_exceeded;
 
 #ifndef NO_LOGS
-    void debug(int a, std::string str) {
+    void debug(int a, std::string str)
+    {
         m_transaction->debug(a, str);
     }
 #endif
 
- private:
+private:
     std::string m_header;
     Transaction *m_transaction;
 };
