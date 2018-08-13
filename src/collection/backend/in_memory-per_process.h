@@ -77,7 +77,7 @@ struct MyEqual
         const unsigned char* pRight = (const unsigned char*) Right.c_str();
         int nLSize = Left.size();
         int nRSize = Right.size();
-        if (nLSize != nRight) return false;
+        if (nLSize != nRSize) return false;
         if (memcmp(pLeft, pRight, nLSize)) return false;
 
         return true;
