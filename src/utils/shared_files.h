@@ -50,6 +50,8 @@ namespace utils {
 
 typedef struct msc_file_handler {
     int shm_id_structure;
+    // this lock can not work in multi process, need to modify
+    // note by zhc wu on 08.18 2018
     pthread_mutex_t lock;
     char file_name[];
 } msc_file_handler_t;
