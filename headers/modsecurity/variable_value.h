@@ -91,36 +91,14 @@ public:
         clist.push_back(t);
     }
 
-    //void push_one(VariableOrigin* t)
-    //{
-    //    clist.push_back(t);
-    //}
-
     int get_conut()
     {
         return clist.size();
     }
 };
 
-//template <>
-//VariableOrigin* CacheList<VariableOrigin>::pop_one();
-//{
-//    if (clist.size() == 0)
-//    {
-//        return new VariableOrigin();
-//    }
-//
-//    VariableOrigin* p = clist.front();
-//    clist.pop_front();
-//
-//    return p;
-//}
-
 template <>
 void CacheList<VariableOrigin>::push_one(VariableOrigin* t);
-//{
-//    clist.push_back(t);
-//}
 
 class Collection;
 class VariableValue
