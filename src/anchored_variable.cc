@@ -74,11 +74,11 @@ namespace modsecurity {
 //    clist.push_back(t);
 //}
 
-//template <>
-//void CacheList<VariableOrigin>::push_one(VariableOrigin* t)
-//{
-//    clist.push_back(t);
-//}
+template <>
+void CacheList<VariableOrigin>::push_one(VariableOrigin* t)
+{
+    clist.push_back(t);
+}
 
 //静态变量的定义
 CacheList<VariableValue> VariableValue::clist_value;
