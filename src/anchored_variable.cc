@@ -78,14 +78,16 @@ AnchoredVariable::AnchoredVariable(Transaction *t, std::string name)
 void AnchoredVariable::init(Transaction* t)
 {
     m_transaction = t;
-    //m_var = new VariableValue(&m_name);
+    // m_name 不需要改,保持原来的
+    // m_var = new VariableValue(&m_name);
+    m_var = VariableValue::clist_value.pop_one(&m_name);
 }
 
 void AnchoredVariable::clear()
 {
     m_offset = 0;
     m_value.append("");
-    //m_var = new VariableValue(&m_name);
+    VariableValue::clist_value.push_one(m_var);
 }
 
 AnchoredVariable::~AnchoredVariable()
