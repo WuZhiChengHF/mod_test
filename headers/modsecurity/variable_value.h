@@ -184,6 +184,17 @@ public:
         m_from_pool = false;
     }
 
+    // 新增构造函数
+    VariableValue(std::shared_ptr<std::string> fullName, const std::string value) :
+        m_key(""),
+        m_value("")
+    {
+        m_value.assign(value);
+        m_keyWithCollection = fullName;
+        m_key.assign(*fullName.get());
+        m_from_pool = false;
+    }
+
     inline void init(std::shared_ptr<std::string> fullName, const std::string value)
     {
         m_value.assign(value);
@@ -191,7 +202,6 @@ public:
         m_key.assign(*fullName.get());
         m_from_pool = true;
     }
-
 
     explicit VariableValue(const VariableValue *o) :
         m_key(""),

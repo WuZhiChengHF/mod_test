@@ -83,8 +83,7 @@ struct MyHash
 };
 
 
-class AnchoredSetVariable : public std::unordered_multimap<std::string,
-    VariableValue *, MyHash, MyEqual>
+class AnchoredSetVariable : public std::unordered_multimap<std::string, VariableValue *, MyHash, MyEqual>
 {
 public:
     AnchoredSetVariable(Transaction *t, std::string name);
