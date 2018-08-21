@@ -76,7 +76,7 @@ public:
 
     // 带初始化参数的pop_one
     template<typename V>
-    T* pop_one(const V v)
+    T* pop_one(V v)
     {
         if (clist.size() == 0)
         {
@@ -84,6 +84,20 @@ public:
         }
         T* p = clist.front();
         p->init(v);
+        clist.pop_front();
+        return p;
+    }
+
+    // 增加带两个初始化参数的pop_one
+    template<typename V, typename W>
+    T* pop_one(V v, W w)
+    {
+        if (clist.size() == 0)
+        {
+            return new T(v, w);
+        }
+        T* p = clist.front();
+        p->init(v, w);
         clist.pop_front();
         return p;
     }
@@ -118,7 +132,7 @@ public:
     }
 
     // 添加字符串参数的初始化函数
-    void init(const std::string *key)
+    inline void init(const std::string *key)
     {
         m_key.assign(*key);
         m_keyWithCollection = std::make_shared<std::string>(*key);
@@ -168,6 +182,14 @@ public:
         m_keyWithCollection = fullName;
         m_key.assign(*fullName.get());
         m_from_pool = false;
+    }
+
+    inline void init(std::shared_ptr<std::string> fullName, const std::string value)
+    {
+        m_value.assign(value);
+        m_keyWithCollection = fullName;
+        m_key.assign(*fullName.get());
+        m_from_pool = true;
     }
 
 

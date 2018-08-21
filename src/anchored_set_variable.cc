@@ -53,8 +53,7 @@ void AnchoredSetVariable::unset()
 }
 
 
-void AnchoredSetVariable::set(const std::string &key,
-                              const std::string &value, size_t offset, size_t len)
+void AnchoredSetVariable::set(const std::string &key, const std::string &value, size_t offset, size_t len)
 {
     std::unique_ptr<VariableOrigin> origin(new VariableOrigin());
     std::string *v = new std::string(value);
